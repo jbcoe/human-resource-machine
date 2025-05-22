@@ -5,75 +5,75 @@ import typing
 Value = typing.Union[int, str]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
+class _UsesRegister:
+    register: Value
+    indirect: bool = False
+
+
+@dataclass(frozen=True, slots=True)
 class Comment:
     text: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Inbox:
     pass
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Outbox:
     pass
 
 
-@dataclass(frozen=True)
-class Add:
-    register: Value
-    indirect: bool = False
+@dataclass(frozen=True, slots=True)
+class Add(_UsesRegister):
+    pass
 
 
-@dataclass(frozen=True)
-class Subtract:
-    register: Value
-    indirect: bool = False
+@dataclass(frozen=True, slots=True)
+class Subtract(_UsesRegister):
+    pass
 
 
-@dataclass(frozen=True)
-class CopyTo:
-    register: Value
-    indirect: bool = False
+@dataclass(frozen=True, slots=True)
+class CopyTo(_UsesRegister):
+    pass
 
 
-@dataclass(frozen=True)
-class CopyFrom:
-    register: Value
-    indirect: bool = False
+@dataclass(frozen=True, slots=True)
+class CopyFrom(_UsesRegister):
+    pass
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
+class BumpPlus(_UsesRegister):
+    pass
+
+
+@dataclass(frozen=True, slots=True)
+class BumpMinus(_UsesRegister):
+    pass
+
+
+@dataclass(frozen=True, slots=True)
 class Label:
     label: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Jump:
     label: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class JumpIfZero:
     label: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class JumpIfNegative:
     label: str
-
-
-@dataclass(frozen=True)
-class BumpPlus:
-    register: Value
-    indirect: bool = False
-
-
-@dataclass(frozen=True)
-class BumpMinus:
-    register: Value
-    indirect: bool = False
 
 
 Instruction = typing.Union[
@@ -84,12 +84,12 @@ Instruction = typing.Union[
     Subtract,
     CopyTo,
     CopyFrom,
+    BumpPlus,
+    BumpMinus,
     Label,
     Jump,
     JumpIfZero,
     JumpIfNegative,
-    BumpPlus,
-    BumpMinus,
 ]
 
 
@@ -180,24 +180,6 @@ class Interpreter:
                     self._value = argument
                     self._instruction_index += 1
                     self._execution_count += 1
-                case Label() | Comment():
-                    self._instruction_index += 1
-                    # No execution count increment for comments or jump targets.
-                case Jump() as jump:
-                    self._instruction_index = jumps[jump.label]
-                    self._execution_count += 1
-                case JumpIfZero() as jump:
-                    if self._value == 0:
-                        self._instruction_index = jumps[jump.label]
-                    else:
-                        self._instruction_index += 1
-                    self._execution_count += 1
-                case JumpIfNegative() as jump:
-                    if self._value < 0:
-                        self._instruction_index = jumps[jump.label]
-                    else:
-                        self._instruction_index += 1
-                    self._execution_count += 1
                 case BumpPlus() as bump_plus:
                     if bump_plus.indirect:
                         self.registers[self.registers[bump_plus.register]] += 1
@@ -218,6 +200,24 @@ class Interpreter:
                         self._value = self.registers[bump_minus.register]
                     self._instruction_index += 1
                     self._execution_count += 1
+                case Label() | Comment():
+                    self._instruction_index += 1
+                    # No execution count increment for comments or jump targets.
+                case Jump() as jump:
+                    self._instruction_index = jumps[jump.label]
+                    self._execution_count += 1
+                case JumpIfZero() as jump:
+                    if self._value == 0:
+                        self._instruction_index = jumps[jump.label]
+                    else:
+                        self._instruction_index += 1
+                    self._execution_count += 1
+                case JumpIfNegative() as jump:
+                    if self._value < 0:
+                        self._instruction_index = jumps[jump.label]
+                    else:
+                        self._instruction_index += 1
+                    self._execution_count += 1
 
     def to_str(self) -> str:
         lines: list[str] = []
@@ -226,7 +226,7 @@ class Interpreter:
         for instruction in self.instructions:
             match instruction:
                 case Comment() as comment:
-                    lines.append(f"{comment.text}")
+                    lines.append(f'"{comment.text}"')
                 case Label() as label:
                     lines.append(f"LABEL: {label.label}")
                 case _ as instruction:
@@ -268,7 +268,7 @@ def main():
     ]
     input = [6, 2, 0, 3, 4]
     interpreter.execute_program(input)
-    print(interpreter.to_str(),"\n")
+    print(interpreter.to_str(), "\n")
     print("Registers:", interpreter.registers)
     print("Input: ", input)
     print("Output:", ", ".join(interpreter.output))
