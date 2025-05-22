@@ -1,6 +1,14 @@
 import typing
 
 
+Value = typing.Union[int, str]
+
+
+class Comment:
+    def __init__(self, text: str):
+        self.text = text
+
+
 class Inbox:
     pass
 
@@ -10,37 +18,32 @@ class Outbox:
 
 
 class Add:
-    def __init__(self, register: str):
+    def __init__(self, register: Value, indirect: bool = False):
         self.register = register
+        self.indirect = indirect
 
 
 class Subtract:
-    def __init__(self, register: str):
+    def __init__(self, register: Value, indirect: bool = False):
         self.register = register
+        self.indirect = indirect
 
 
 class CopyTo:
-    def __init__(self, register: str):
+    def __init__(self, register: Value, indirect: bool = False):
         self.register = register
+        self.indirect = indirect
 
 
 class CopyFrom:
-    def __init__(self, register: str):
+    def __init__(self, register: Value, indirect: bool = False):
         self.register = register
+        self.indirect = indirect
 
 
 class JumpTarget:
     def __init__(self, label: str):
         self.label = label
-
-    def __hash__(self):
-        return hash(self.label)
-
-    def __eq__(self, other):
-        if not isinstance(other, JumpTarget):
-            return False
-        return self.label == other.label
-
 
 class Jump:
     def __init__(self, label: str):
@@ -58,16 +61,19 @@ class JumpIfNegative:
 
 
 class BumpPlus:
-    def __init__(self, register: str):
+    def __init__(self, register: Value, indirect: bool = False):
         self.register = register
+        self.indirect = indirect
 
 
 class BumpMinus:
-    def __init__(self, register: str):
+    def __init__(self, register: Value, indirect: bool = False):
         self.register = register
+        self.indirect = indirect
 
 
 Instruction = typing.Union[
+    Comment,
     Inbox,
     Outbox,
     Add,
@@ -84,18 +90,18 @@ Instruction = typing.Union[
 
 
 class Interpreter:
-    def __init__(self, instructions: list[Instruction]|None = None):
-        self.instructions:list[Instruction] = instructions or []
+    def __init__(self, instructions: list[Instruction] | None = None):
+        self.instructions: list[Instruction] = instructions or []
         self._value: int | None = None
-        self._registers: dict[str, int | str] = {}
+        self._registers: dict[Value, Value] = {}
         self._instruction_index: int = 0
         self._input_index: int = 0
-        self._output: list[int | str] = []
+        self._output: list[Value] = []
 
-    def execute_program(self, input: list[int | str]) -> None:
+    def execute_program(self, input: list[Value]) -> None:
         self.__init__(self.instructions)
 
-        jumps: dict[JumpTarget, int] = {}
+        jumps: dict[str, int] = {}
         for index, instruction in enumerate(self.instructions):
             match instruction:
                 case JumpTarget():
@@ -108,7 +114,7 @@ class Interpreter:
             match instruction:
                 case Inbox():
                     if self._input_index >= len(input):
-                        return # No more input available.
+                        return  # No more input available.
                     self._value = input[self._input_index]
                     self._input_index += 1
                     self._instruction_index += 1
@@ -119,32 +125,39 @@ class Interpreter:
                     self._value = None
                     self._instruction_index += 1
                 case Add() as add_:
-                    if self._value is None:
-                        raise ValueError("No value to add to")
-                    argument: int|str|None = self._registers.get(add_.register, 0)
-                    if argument is None:
-                        raise ValueError(f"Register {add_.register} has no value")
+                    if add_.indirect:
+                        argument: Value = self._registers[
+                            self._registers[add_.register]
+                        ]
+                    else:
+                        argument = self._registers[add_.register]
                     self._value += argument
                     self._instruction_index += 1
                 case Subtract() as subtract_:
-                    if self._value is None:
-                        raise ValueError("No value to add to")
-                    argument: int|str|None = self._registers.get(subtract_.register, 0)
-                    if argument is None:
-                        raise ValueError(f"Register {subtract_.register} has no value")
-                    self._value -= argument
+                    if subtract_.indirect:
+                        argument: Value = self._registers[
+                            self._registers[subtract_.register]
+                        ]
+                    else:
+                        argument = self._registers[subtract_.register]
+                    self._value += argument
                     self._instruction_index += 1
                 case CopyTo() as copy_to:
-                    self._registers[copy_to.register] = self._value
+                    if copy_to.indirect:
+                        self._registers[self._registers[copy_to.register]] = self._value
+                    else:
+                        self._registers[copy_to.register] = self._value
                     self._instruction_index += 1
                 case CopyFrom() as copy_from:
-                    argument: int|str|None = self._registers.get(copy_from.register, 0)
-                    if argument is None:
-                        raise ValueError(f"Register {copy_from.register} has no value")
+                    if copy_from.indirect:
+                        argument: Value = self._registers[
+                            self._registers[copy_from.register]
+                        ]
+                    else:
+                        argument = self._registers[copy_from.register, 0]
                     self._value = argument
                     self._instruction_index += 1
-                case JumpTarget():
-                    # This is a no-op, just a label
+                case JumpTarget() | Comment():
                     self._instruction_index += 1
                 case Jump() as jump:
                     self._instruction_index = jumps[jump.label]
@@ -159,20 +172,28 @@ class Interpreter:
                     else:
                         self._instruction_index += 1
                 case BumpPlus() as bump_plus:
-                    if bump_plus.register not in self._registers:
-                         raise ValueError(f"Register {bump_plus.register} has no value")
-                    self._registers[bump_plus.register] += 1
-                    self._value = self._registers[bump_plus.register]
+                    if bump_plus.indirect:
+                        self._registers[self._registers[bump_plus.register]] += 1
+                        self._value = self._registers[
+                            self._registers[bump_plus.register]
+                        ]
+                    else:
+                        self._registers[bump_plus.register] += 1
+                        self._value = self._registers[bump_plus.register]
                     self._instruction_index += 1
                 case BumpMinus() as bump_minus:
-                    if bump_minus.register not in self._registers:
-                         raise ValueError(f"Register {bump_minus.register} has no value")
-                    self._registers[bump_minus.register] -= 1
-                    self._value = self._registers[bump_minus.register]
+                    if bump_minus.indirect:
+                        self._registers[self._registers[bump_minus.register]] -= 1
+                        self._value = self._registers[
+                            self._registers[bump_minus.register]
+                        ]
+                    else:
+                        self._registers[bump_minus.register] -= 1
+                        self._value = self._registers[bump_minus.register]
                     self._instruction_index += 1
 
     @property
-    def output(self) -> list[int | str]:
+    def output(self) -> list[Value]:
         return self._output.copy()
 
 
@@ -181,13 +202,13 @@ def main():
     interpreter.instructions = [
         JumpTarget("BEGIN"),
         Inbox(),
-        CopyTo("a"),
+        CopyTo(0),
         Inbox(),
-        Add("a"),
+        Add(0),
         Outbox(),
         Jump("BEGIN"),
     ]
-    interpreter.execute_program([1, 2, 3, 4])
+    interpreter.execute_program([1, 20, 3, -4, 100, 5])
     for value in interpreter.output:
         print(value)
 
