@@ -1,76 +1,79 @@
+from dataclasses import dataclass
 import typing
 
 
 Value = typing.Union[int, str]
 
 
+@dataclass(frozen=True)
 class Comment:
-    def __init__(self, text: str):
-        self.text = text
+    text: str
 
 
+@dataclass(frozen=True)
 class Inbox:
     pass
 
 
+@dataclass(frozen=True)
 class Outbox:
     pass
 
 
+@dataclass(frozen=True)
 class Add:
-    def __init__(self, register: Value, indirect: bool = False):
-        self.register = register
-        self.indirect = indirect
+    register: Value
+    indirect: bool = False
 
 
+@dataclass(frozen=True)
 class Subtract:
-    def __init__(self, register: Value, indirect: bool = False):
-        self.register = register
-        self.indirect = indirect
+    register: Value
+    indirect: bool = False
 
 
+@dataclass(frozen=True)
 class CopyTo:
-    def __init__(self, register: Value, indirect: bool = False):
-        self.register = register
-        self.indirect = indirect
+    register: Value
+    indirect: bool = False
 
 
+@dataclass(frozen=True)
 class CopyFrom:
-    def __init__(self, register: Value, indirect: bool = False):
-        self.register = register
-        self.indirect = indirect
+    register: Value
+    indirect: bool = False
 
 
-class JumpTarget:
-    def __init__(self, label: str):
-        self.label = label
+@dataclass(frozen=True)
+class Label:
+    label: str
 
 
+@dataclass(frozen=True)
 class Jump:
-    def __init__(self, label: str):
-        self.label = label
+    label: str
 
 
+@dataclass(frozen=True)
 class JumpIfZero:
-    def __init__(self, label: str):
-        self.label = label
+    label: str
 
 
+@dataclass(frozen=True)
 class JumpIfNegative:
-    def __init__(self, label: str):
-        self.label = label
+    label: str
 
 
+@dataclass(frozen=True)
 class BumpPlus:
-    def __init__(self, register: Value, indirect: bool = False):
-        self.register = register
-        self.indirect = indirect
+    register: Value
+    indirect: bool = False
 
 
+@dataclass(frozen=True)
 class BumpMinus:
-    def __init__(self, register: Value, indirect: bool = False):
-        self.register = register
-        self.indirect = indirect
+    register: Value
+    indirect: bool = False
 
 
 Instruction = typing.Union[
@@ -81,7 +84,7 @@ Instruction = typing.Union[
     Subtract,
     CopyTo,
     CopyFrom,
-    JumpTarget,
+    Label,
     Jump,
     JumpIfZero,
     JumpIfNegative,
@@ -112,7 +115,7 @@ class Interpreter:
         self.instruction_count = 0
         for instruction in self.instructions:
             match instruction:
-                case JumpTarget() | Comment():
+                case Label() | Comment():
                     pass
                 case _:
                     self.instruction_count += 1
@@ -120,7 +123,7 @@ class Interpreter:
         jumps: dict[str, int] = {}
         for index, instruction in enumerate(self.instructions):
             match instruction:
-                case JumpTarget():
+                case Label():
                     jumps[instruction.label] = index
                 case _:
                     pass
@@ -177,7 +180,7 @@ class Interpreter:
                     self._value = argument
                     self._instruction_index += 1
                     self._execution_count += 1
-                case JumpTarget() | Comment():
+                case Label() | Comment():
                     self._instruction_index += 1
                     # No execution count increment for comments or jump targets.
                 case Jump() as jump:
@@ -216,6 +219,21 @@ class Interpreter:
                     self._instruction_index += 1
                     self._execution_count += 1
 
+    def to_str(self) -> str:
+        lines: list[str] = []
+        index: int = 1
+
+        for instruction in self.instructions:
+            match instruction:
+                case Comment() as comment:
+                    lines.append(f"{comment.text}")
+                case Label() as label:
+                    lines.append(f"LABEL: {label.label}")
+                case _ as instruction:
+                    lines.append(f"{index}: {instruction}")
+                    index += 1
+        return "\n".join(lines)
+
     @property
     def output(self) -> list[Value]:
         return self._output.copy()
@@ -241,16 +259,19 @@ def main():
         12: 8,
     }
     interpreter.instructions = [
-        JumpTarget("BEGIN"),
+        Label("BEGIN"),
         Inbox(),
         CopyTo(12),
         CopyFrom(12, indirect=True),
         Outbox(),
         Jump("BEGIN"),
     ]
-    interpreter.execute_program([6, 2, 0, 3, 4])
-    for value in interpreter.output:
-        print(value)
+    input = [6, 2, 0, 3, 4]
+    interpreter.execute_program(input)
+    print(interpreter.to_str(),"\n")
+    print("Registers:", interpreter.registers)
+    print("Input: ", input)
+    print("Output:", ", ".join(interpreter.output))
     print("Execution count:", interpreter.executions)
     print("Instruction count:", interpreter.instruction_count)
 
