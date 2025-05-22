@@ -1,0 +1,33 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v5.0.0
+  hooks:
+  - id: check-yaml
+  - id: end-of-file-fixer
+  - id: debug-statements
+  - id: forbid-submodules
+  - id: requirements-txt-fixer
+  - id: trailing-whitespace
+
+- repo: https://github.com/codespell-project/codespell
+  rev: v2.4.1
+  hooks:
+  - id: codespell
+    additional_dependencies:
+      - tomli
+
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.11.11
+  hooks:
+    - id: ruff
+      args: [ --fix ]
+    - id: ruff-format
+
+- repo: local
+  hooks:
+    - id: ty
+      name: ty check
+      entry: uv run --active ty check .
+      language: python
