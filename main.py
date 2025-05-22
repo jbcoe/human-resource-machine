@@ -130,7 +130,6 @@ class Interpreter:
             match instruction:
                 case Inbox():
                     if self._input_index >= len(input):
-                        self._execution_count -= 1
                         return  # No more input available.
                     self._value = input[self._input_index]
                     self._input_index += 1
@@ -180,6 +179,7 @@ class Interpreter:
                     self._execution_count += 1
                 case JumpTarget() | Comment():
                     self._instruction_index += 1
+                    # No execution count increment for comments or jump targets.
                 case Jump() as jump:
                     self._instruction_index = jumps[jump.label]
                     self._execution_count += 1
@@ -227,23 +227,28 @@ class Interpreter:
 
 def main():
     interpreter = Interpreter()
-    interpreter.registers = {}
+    interpreter.registers = {
+        0: "N",
+        1: "K",
+        2: "A",
+        3: "E",
+        4: "R",
+        5: "D",
+        6: "O",
+        7: "L",
+        8: "Y",
+        9: "J",
+        12: 8,
+    }
     interpreter.instructions = [
         JumpTarget("BEGIN"),
         Inbox(),
-        CopyTo(0),
-        Inbox(),
-        Subtract(0),
-        JumpIfNegative("Label1"),
-        Add(0),
-        Jump("Label2"),
-        JumpTarget("Label1"),
-        CopyFrom(0),
-        JumpTarget("Label2"),
+        CopyTo(12),
+        CopyFrom(12, indirect=True),
         Outbox(),
         Jump("BEGIN"),
     ]
-    interpreter.execute_program([4, 3, -7, -2, 4, 4, -2, 2])
+    interpreter.execute_program([6, 2, 0, 3, 4])
     for value in interpreter.output:
         print(value)
     print("Execution count:", interpreter.executions)
