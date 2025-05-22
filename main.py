@@ -45,6 +45,7 @@ class JumpTarget:
     def __init__(self, label: str):
         self.label = label
 
+
 class Jump:
     def __init__(self, label: str):
         self.label = label
@@ -90,16 +91,31 @@ Instruction = typing.Union[
 
 
 class Interpreter:
-    def __init__(self, instructions: list[Instruction] | None = None):
+    def __init__(
+        self,
+        *,
+        registers: dict[Value, Value] | None = None,
+        instructions: list[Instruction] | None = None,
+    ):
         self.instructions: list[Instruction] = instructions or []
+        self.registers = registers or {}
+        self.instruction_count: int = 0
         self._value: int | None = None
-        self._registers: dict[Value, Value] = {}
         self._instruction_index: int = 0
         self._input_index: int = 0
         self._output: list[Value] = []
+        self._execution_count: int = 0
 
     def execute_program(self, input: list[Value]) -> None:
-        self.__init__(self.instructions)
+        self.__init__(instructions=self.instructions, registers=self.registers)
+
+        self.instruction_count = 0
+        for instruction in self.instructions:
+            match instruction:
+                case JumpTarget() | Comment():
+                    pass
+                case _:
+                    self.instruction_count += 1
 
         jumps: dict[str, int] = {}
         for index, instruction in enumerate(self.instructions):
@@ -114,103 +130,124 @@ class Interpreter:
             match instruction:
                 case Inbox():
                     if self._input_index >= len(input):
+                        self._execution_count -= 1
                         return  # No more input available.
                     self._value = input[self._input_index]
                     self._input_index += 1
                     self._instruction_index += 1
+                    self._execution_count += 1
                 case Outbox():
                     if self._value is None:
                         raise ValueError("No value to output")
                     self._output.append(self._value)
                     self._value = None
                     self._instruction_index += 1
+                    self._execution_count += 1
                 case Add() as add_:
                     if add_.indirect:
-                        argument: Value = self._registers[
-                            self._registers[add_.register]
-                        ]
+                        argument: Value = self.registers[self.registers[add_.register]]
                     else:
-                        argument = self._registers[add_.register]
+                        argument = self.registers[add_.register]
                     self._value += argument
                     self._instruction_index += 1
+                    self._execution_count += 1
                 case Subtract() as subtract_:
                     if subtract_.indirect:
-                        argument: Value = self._registers[
-                            self._registers[subtract_.register]
+                        argument: Value = self.registers[
+                            self.registers[subtract_.register]
                         ]
                     else:
-                        argument = self._registers[subtract_.register]
-                    self._value += argument
+                        argument = self.registers[subtract_.register]
+                    self._value -= argument
                     self._instruction_index += 1
+                    self._execution_count += 1
                 case CopyTo() as copy_to:
                     if copy_to.indirect:
-                        self._registers[self._registers[copy_to.register]] = self._value
+                        self.registers[self.registers[copy_to.register]] = self._value
                     else:
-                        self._registers[copy_to.register] = self._value
+                        self.registers[copy_to.register] = self._value
                     self._instruction_index += 1
+                    self._execution_count += 1
                 case CopyFrom() as copy_from:
                     if copy_from.indirect:
-                        argument: Value = self._registers[
-                            self._registers[copy_from.register]
+                        argument: Value = self.registers[
+                            self.registers[copy_from.register]
                         ]
                     else:
-                        argument = self._registers[copy_from.register, 0]
+                        argument = self.registers[copy_from.register]
                     self._value = argument
                     self._instruction_index += 1
+                    self._execution_count += 1
                 case JumpTarget() | Comment():
                     self._instruction_index += 1
                 case Jump() as jump:
                     self._instruction_index = jumps[jump.label]
+                    self._execution_count += 1
                 case JumpIfZero() as jump:
                     if self._value == 0:
                         self._instruction_index = jumps[jump.label]
                     else:
                         self._instruction_index += 1
+                    self._execution_count += 1
                 case JumpIfNegative() as jump:
                     if self._value < 0:
                         self._instruction_index = jumps[jump.label]
                     else:
                         self._instruction_index += 1
+                    self._execution_count += 1
                 case BumpPlus() as bump_plus:
                     if bump_plus.indirect:
-                        self._registers[self._registers[bump_plus.register]] += 1
-                        self._value = self._registers[
-                            self._registers[bump_plus.register]
-                        ]
+                        self.registers[self.registers[bump_plus.register]] += 1
+                        self._value = self.registers[self.registers[bump_plus.register]]
                     else:
-                        self._registers[bump_plus.register] += 1
-                        self._value = self._registers[bump_plus.register]
+                        self.registers[bump_plus.register] += 1
+                        self._value = self.registers[bump_plus.register]
                     self._instruction_index += 1
+                    self._execution_count += 1
                 case BumpMinus() as bump_minus:
                     if bump_minus.indirect:
-                        self._registers[self._registers[bump_minus.register]] -= 1
-                        self._value = self._registers[
-                            self._registers[bump_minus.register]
+                        self.registers[self.registers[bump_minus.register]] -= 1
+                        self._value = self.registers[
+                            self.registers[bump_minus.register]
                         ]
                     else:
-                        self._registers[bump_minus.register] -= 1
-                        self._value = self._registers[bump_minus.register]
+                        self.registers[bump_minus.register] -= 1
+                        self._value = self.registers[bump_minus.register]
                     self._instruction_index += 1
+                    self._execution_count += 1
 
     @property
     def output(self) -> list[Value]:
         return self._output.copy()
 
+    @property
+    def executions(self) -> int:
+        return self._execution_count
+
 
 def main():
     interpreter = Interpreter()
+    interpreter.registers = {}
     interpreter.instructions = [
         JumpTarget("BEGIN"),
         Inbox(),
         CopyTo(0),
         Inbox(),
+        Subtract(0),
+        JumpIfNegative("Label1"),
         Add(0),
+        Jump("Label2"),
+        JumpTarget("Label1"),
+        CopyFrom(0),
+        JumpTarget("Label2"),
         Outbox(),
         Jump("BEGIN"),
     ]
-    interpreter.execute_program([1, 20, 3, -4, 100, 5])
+    interpreter.execute_program([4, 3, -7, -2, 4, 4, -2, 2])
     for value in interpreter.output:
         print(value)
+    print("Execution count:", interpreter.executions)
+    print("Instruction count:", interpreter.instruction_count)
 
 
 if __name__ == "__main__":
