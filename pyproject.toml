@@ -1,10 +1,17 @@
+[build-system]
+requires = ["setuptools>=67.0.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "human-resource-machine"
+name = "xyz-human-resource-machine"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = []
+
+[project.scripts]
+human-resource-machine = "xyz.human_resource_machine.__main__:main"
 
 [dependency-groups]
 dev = [
