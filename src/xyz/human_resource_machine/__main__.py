@@ -40,7 +40,7 @@ def main():
     print(interpreter.to_str(), "\n")
     print("Registers:", interpreter.registers)
     print("Input: ", input)
-    print("Output:", ", ".join(interpreter.output))
+    print("Output:", ", ".join(str(x) for x in interpreter.output))
     print("Execution count:", interpreter.executions)
     print("Instruction count:", interpreter.instruction_count)
 
