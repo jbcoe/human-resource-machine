@@ -1,7 +1,14 @@
 import os
 import sys
 from typing import Any
-from xyz.human_resource_machine.interpreter import Interpreter, Value
+from xyz.human_resource_machine.interpreter import (
+    AssertRegisterIs,
+    AssertValueIs,
+    Comment,
+    Interpreter,
+    Label,
+    Value,
+)
 
 import argparse
 import importlib.util
@@ -38,11 +45,23 @@ def main():
 
     interpreter.execute_program(input)
     print(interpreter.to_str(), "\n")
-    print("Registers:", interpreter.registers)
-    print("Input: ", input)
+    print("Input: ", ", ".join(str(x) for x in input))
     print("Output:", ", ".join(str(x) for x in interpreter.output))
-    print("Execution count:", interpreter.executions)
-    print("Instruction count:", interpreter.instruction_count)
+    print("Registers used:", len(interpreter.registers))
+
+    if level.SPEED_CHALLENGE:
+        print(
+            f"Execution count: {interpreter.executions} target: {level.SPEED_CHALLENGE}"
+        )
+    if level.SIZE_CHALLENGE:
+        instruction_count = 0
+        for instruction in interpreter.instructions:
+            match instruction:
+                case Label() | Comment() | AssertValueIs() | AssertRegisterIs():
+                    continue
+                case _:
+                    instruction_count += 1
+        print(f"Size challenge: {instruction_count} target: {level.SIZE_CHALLENGE}")
 
 
 if __name__ == "__main__":
