@@ -1,5 +1,6 @@
 from xyz.human_resource_machine.interpreter import (
     Add,
+    AssertRegisterIs,
     BumpPlus,
     Value,
     Label,
@@ -90,6 +91,7 @@ INSTRUCTIONS: list[Instruction] = [
       # 9
       # No check and jump, just flow down.
 
+    AssertRegisterIs("digit", 1),
     Label("Write Hundreds: 9"),
     BumpPlus("digit"),
     Label("Write Hundreds: 8"),
@@ -157,6 +159,7 @@ INSTRUCTIONS: list[Instruction] = [
       # 9
       # No check and jump, just flow down.
 
+    AssertRegisterIs("digit", 0),
     BumpPlus("digit"),
     Label("Write Tens: 8"),
     BumpPlus("digit"),

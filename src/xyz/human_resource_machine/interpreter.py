@@ -76,6 +76,21 @@ class JumpIfNegative:
     label: str
 
 
+@dataclass(frozen=True, slots=True)
+class AssertValueIs:
+    """This instruction does not exist in the original game, but is useful for testing."""
+
+    value: Value
+
+
+@dataclass(frozen=True, slots=True)
+class AssertRegisterIs:
+    """This instruction does not exist in the original game, but is useful for testing."""
+
+    register: str
+    value: Value
+
+
 Instruction = typing.Union[
     Comment,
     Inbox,
@@ -90,6 +105,7 @@ Instruction = typing.Union[
     Jump,
     JumpIfZero,
     JumpIfNegative,
+    AssertValueIs,
 ]
 
 
@@ -218,6 +234,21 @@ class Interpreter:
                     else:
                         self._instruction_index += 1
                     self._execution_count += 1
+                case AssertValueIs() as assert_value:
+                    if self._value != assert_value.value:
+                        raise ValueError(
+                            f"Assertion failed: expected {assert_value.value}, got {self._value}"
+                        )
+                    self._instruction_index += 1
+                case AssertRegisterIs() as assert_register:
+                    if (
+                        self.registers[assert_register.register]
+                        != assert_register.value
+                    ):
+                        raise ValueError(
+                            f"Assertion failed: expected register '{assert_register.register}' to be {assert_register.value}, got {self.registers[assert_register.register]}"
+                        )
+                    self._instruction_index += 1
 
     def to_str(self) -> str:
         lines: list[str] = []
@@ -225,6 +256,8 @@ class Interpreter:
 
         for instruction in self.instructions:
             match instruction:
+                case AssertValueIs() | AssertRegisterIs():
+                    continue
                 case Comment() as comment:
                     lines.append(f'"{comment.text}"')
                 case Label() as label:
