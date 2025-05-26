@@ -215,7 +215,7 @@ def test_subtract():
 
 
 def test_add_indirect():
-    """Test Add instruction with with indirection."""
+    """Test Add instruction with indirection."""
     registers = {"A": 5, 0: 4, 4: 3}
     instructions = [CopyFrom("A"), Add(0, indirect=True)]
     interpreter = Interpreter(instructions=instructions, registers=registers)
