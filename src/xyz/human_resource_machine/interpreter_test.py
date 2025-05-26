@@ -118,3 +118,29 @@ def test_copy_from_register():
     assert interpreter.value == 42
 
     interpreter.execute_program()
+
+
+def test_copy_from_register_with_indirect():
+    """Test CopyFrom instruction with an indirect register."""
+    registers = {0: 4, 4: 42}
+    instructions = [
+        CopyFrom(0, indirect=True),  # Reads from register 4
+    ]
+    interpreter = Interpreter(instructions=instructions, registers=registers)
+    interpreter.execute_program()
+
+    assert interpreter.value == 42
+
+
+def test_copy_to_register_with_indirect():
+    """Test CopyFrom instruction with an indirect register."""
+    registers = {0: 4}
+    instructions = [
+        Inbox(),  # Reads from input
+        CopyTo(0, indirect=True),  # Writes to register 4
+    ]
+    interpreter = Interpreter(
+        input=[42], instructions=instructions, registers=registers
+    )
+    interpreter.execute_program()
+    assert interpreter.register(4) == 42

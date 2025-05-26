@@ -185,6 +185,8 @@ class Interpreter:
                 self._instruction_index += 1
                 self._execution_count += 1
             case CopyTo() as copy_to:
+                if self._value is None:
+                    raise ValueError("No value to copy")
                 if copy_to.indirect:
                     self.registers[self.registers[copy_to.register]] = self._value
                 else:
