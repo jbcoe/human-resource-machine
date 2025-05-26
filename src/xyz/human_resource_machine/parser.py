@@ -72,7 +72,9 @@ class Parser:
             case lexer.Instruction.JUMPN:
                 return self._parse_with_label_arg(interpreter.JumpIfNegative)
             case _:
-                raise ValueError(f"Unknown instruction: {token.value}")
+                raise ValueError(
+                    f"Unknown instruction at line {getattr(token, 'line', self.current_token_index)}: {token.value}"
+                )
 
     @property
     def token(self) -> lexer.Token | None:
