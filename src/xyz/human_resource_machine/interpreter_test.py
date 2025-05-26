@@ -137,7 +137,7 @@ def test_copy_from_register_with_indirect():
 
 
 def test_copy_to_register_with_indirect():
-    """Test CopyFrom instruction with an indirect register."""
+    """Test CopyTo instruction with an indirect register."""
     registers = {0: 4}
     instructions = [
         Inbox(),  # Reads from input
