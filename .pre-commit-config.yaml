@@ -24,10 +24,3 @@ repos:
     - id: ruff
       args: [ --fix ]
     - id: ruff-format
-
-- repo: local
-  hooks:
-    - id: ty
-      name: ty check
-      entry: uv run --active ty check .
-      language: python
