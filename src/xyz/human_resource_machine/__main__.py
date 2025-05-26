@@ -10,7 +10,6 @@ from xyz.human_resource_machine.interpreter import (
     Comment,
     Interpreter,
     Label,
-    Value,
 )
 
 
@@ -37,15 +36,15 @@ def main():
 
     level = _load_level(args.level)
 
-    interpreter = Interpreter()
+    interpreter = Interpreter(
+        instructions=level.INSTRUCTIONS,
+        registers=level.REGISTERS,
+        input=level.INPUT,
+    )
 
-    interpreter.registers = level.REGISTERS
-    interpreter.instructions = level.INSTRUCTIONS
-    input: list[Value] = level.INPUT
-
-    output = interpreter.execute_program(input)
+    output = interpreter.execute_program()
     print(interpreter.to_str(), "\n")
-    print("Input: ", ", ".join(str(x) for x in input))
+    print("Input: ", ", ".join(str(x) for x in interpreter._input))
     print("Output:", ", ".join(str(x) for x in output))
     print("Registers used:", len(interpreter.registers))
 
