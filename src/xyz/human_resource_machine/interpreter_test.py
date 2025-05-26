@@ -3,6 +3,9 @@
 import pytest
 
 from xyz.human_resource_machine.interpreter import (
+    Add,
+    BumpMinus,
+    BumpPlus,
     CopyFrom,
     CopyTo,
     Inbox,
@@ -10,6 +13,7 @@ from xyz.human_resource_machine.interpreter import (
     Jump,
     Label,
     Outbox,
+    Subtract,
 )
 
 
@@ -144,3 +148,67 @@ def test_copy_to_register_with_indirect():
     )
     interpreter.execute_program()
     assert interpreter.register(4) == 42
+
+
+def test_bump_plus():
+    """Test BumpPlus instruction."""
+    registers = {"A": 5}
+    instructions = [BumpPlus("A")]
+    interpreter = Interpreter(instructions=instructions, registers=registers)
+    interpreter.execute_program()
+
+    assert interpreter.register("A") == 6
+    assert interpreter.value == 6
+
+
+def test_bump_minus():
+    """Test BumpMinus instruction."""
+    registers = {"A": 5}
+    instructions = [BumpMinus("A")]
+    interpreter = Interpreter(instructions=instructions, registers=registers)
+    interpreter.execute_program()
+
+    assert interpreter.register("A") == 4
+    assert interpreter.value == 4
+
+
+def test_bump_plus_indirect():
+    """Test BumpPlus instruction."""
+    registers = {0: 4, 4: 42}
+    instructions = [BumpPlus(0, indirect=True)]  # Bumps register 4
+    interpreter = Interpreter(instructions=instructions, registers=registers)
+    interpreter.execute_program()
+
+    assert interpreter.register(4) == 43
+    assert interpreter.value == 43
+
+
+def test_bump_minus_indirect():
+    """Test BumpMinus instruction."""
+    registers = {0: 4, 4: 42}
+    instructions = [BumpMinus(0, indirect=True)]  # Bumps register 4
+    interpreter = Interpreter(instructions=instructions, registers=registers)
+    interpreter.execute_program()
+
+    assert interpreter.register(4) == 41
+    assert interpreter.value == 41
+
+
+def test_add():
+    """Test Add instruction."""
+    registers = {"A": 5, "B": 3}
+    instructions = [CopyFrom("A"), Add("B")]
+    interpreter = Interpreter(instructions=instructions, registers=registers)
+    interpreter.execute_program()
+
+    assert interpreter.value == 8
+
+
+def test_subtract():
+    """Test Subtract instruction."""
+    registers = {"A": 5, "B": 3}
+    instructions = [CopyFrom("A"), Subtract("B")]
+    interpreter = Interpreter(instructions=instructions, registers=registers)
+    interpreter.execute_program()
+
+    assert interpreter.value == 2

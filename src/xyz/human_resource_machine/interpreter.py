@@ -142,6 +142,19 @@ class Interpreter:
                 case _:
                     pass
 
+    def _read_register(self, instruction: _UsesRegister) -> Value:
+        """Read the value from the register, handling indirect addressing."""
+        if instruction.indirect:
+            return self.registers[self.registers[instruction.register]]
+        return self.registers[instruction.register]
+
+    def _write_register(self, instruction: _UsesRegister) -> None:
+        """Write the value to the register, handling indirect addressing."""
+        if instruction.indirect:
+            self.registers[self.registers[instruction.register]] = self._value
+        else:
+            self.registers[instruction.register] = self._value
+
     def execute_program(self) -> list[Value]:
         """Execute all the instructions in the program until completion."""
         while self._instruction_index < len(self.instructions):
@@ -169,36 +182,22 @@ class Interpreter:
                 self._instruction_index += 1
                 self._execution_count += 1
             case Add() as add_:
-                if add_.indirect:
-                    argument: Value = self.registers[self.registers[add_.register]]
-                else:
-                    argument = self.registers[add_.register]
+                argument = self._read_register(add_)
                 self._value += argument
                 self._instruction_index += 1
                 self._execution_count += 1
             case Subtract() as subtract_:
-                if subtract_.indirect:
-                    argument: Value = self.registers[self.registers[subtract_.register]]
-                else:
-                    argument = self.registers[subtract_.register]
+                argument = self._read_register(subtract_)
                 self._value -= argument
                 self._instruction_index += 1
                 self._execution_count += 1
             case CopyTo() as copy_to:
-                if self._value is None:
-                    raise ValueError("No value to copy")
-                if copy_to.indirect:
-                    self.registers[self.registers[copy_to.register]] = self._value
-                else:
-                    self.registers[copy_to.register] = self._value
+                self._write_register(copy_to)
                 self._instruction_index += 1
                 self._execution_count += 1
             case CopyFrom() as copy_from:
-                if copy_from.indirect:
-                    argument: Value = self.registers[self.registers[copy_from.register]]
-                else:
-                    argument = self.registers[copy_from.register]
-                self._value = argument
+                register_value = self._read_register(copy_from)
+                self._value = register_value
                 self._instruction_index += 1
                 self._execution_count += 1
             case BumpPlus() as bump_plus:
