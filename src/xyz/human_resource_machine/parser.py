@@ -1,5 +1,7 @@
 """A parser for a Human Resource Machine-like language."""
 
+from typing import Type
+
 import xyz.human_resource_machine.interpreter as interpreter
 import xyz.human_resource_machine.lexer as lexer
 
@@ -13,22 +15,33 @@ class Parser:
         self.tokens = self.lexer.tokenize()
         self.current_token_index = 0
 
-    def _parse_argument(self) -> str:
-        """Parse a single argument token into an interpreter argument."""
-        token = self.token
-        if token is None or token.kind != lexer.TokenKind.ARGUMENT:
-            raise ValueError(f"Expected argument, but got {token}.")
-        return token.value
-
-    def _parse_register(self) -> tuple[str, bool]:
+    def _parse_with_register_arg(
+        self, cls: Type[interpreter.Instruction]
+    ) -> interpreter.Instruction:
         """Parse a register token into an interpreter register."""
+        if self.token is None or self.token.kind != lexer.TokenKind.INSTRUCTION:
+            raise ValueError(f"Expected instruction, but got {self.token}.")
+        self.step()
         token = self.token
         if token is None or token.kind != lexer.TokenKind.ARGUMENT:
             raise ValueError(f"Expected argument, but got {token}.")
         register = token.value
         if register.startswith("[") and register.endswith("]"):
-            return register[1:-1], True
-        return register, False
+            return cls(register[1:-1], True)
+        return cls(register, False)
+
+    def _parse_with_label_arg(
+        self, cls: Type[interpreter.Instruction]
+    ) -> interpreter.Instruction:
+        """Parse a label token into an interpreter label."""
+        if self.token is None or self.token.kind != lexer.TokenKind.INSTRUCTION:
+            raise ValueError(f"Expected instruction, but got {self.token}.")
+        self.step()
+        token = self.token
+        if token is None or token.kind != lexer.TokenKind.ARGUMENT:
+            raise ValueError(f"Expected argument, but got {token}.")
+        label = token.value
+        return cls(label)
 
     def _parse_instruction(self) -> interpreter.Instruction:
         """Parse one or more tokens into an interpreter instruction."""
@@ -41,41 +54,23 @@ class Parser:
             case lexer.Instruction.OUTBOX:
                 return interpreter.Outbox()
             case lexer.Instruction.COPYFROM:
-                self.step()  # Move to the next token for the argument
-                register, indirect = self._parse_register()
-                return interpreter.CopyFrom(register, indirect)
+                return self._parse_with_register_arg(interpreter.CopyFrom)
             case lexer.Instruction.COPYTO:
-                self.step()  # Move to the next token for the argument
-                register, indirect = self._parse_register()
-                return interpreter.CopyTo(register, indirect)
+                return self._parse_with_register_arg(interpreter.CopyTo)
             case lexer.Instruction.ADD:
-                self.step()  # Move to the next token for the argument
-                register, indirect = self._parse_register()
-                return interpreter.Add(register, indirect)
+                return self._parse_with_register_arg(interpreter.Add)
             case lexer.Instruction.SUB:
-                self.step()  # Move to the next token for the argument
-                register, indirect = self._parse_register()
-                return interpreter.Subtract(register, indirect)
+                return self._parse_with_register_arg(interpreter.Subtract)
             case lexer.Instruction.BUMPUP:
-                self.step()  # Move to the next token for the argument
-                register, indirect = self._parse_register()
-                return interpreter.BumpPlus(register, indirect)
+                return self._parse_with_register_arg(interpreter.BumpPlus)
             case lexer.Instruction.BUMPDN:
-                self.step()  # Move to the next token for the argument
-                register, indirect = self._parse_register()
-                return interpreter.BumpMinus(register, indirect)
+                return self._parse_with_register_arg(interpreter.BumpMinus)
             case lexer.Instruction.JUMP:
-                self.step()
-                label = self._parse_argument()
-                return interpreter.Jump(label)
+                return self._parse_with_label_arg(interpreter.Jump)
             case lexer.Instruction.JUMPZ:
-                self.step()
-                label = self._parse_argument()
-                return interpreter.JumpIfZero(label)
+                return self._parse_with_label_arg(interpreter.JumpIfZero)
             case lexer.Instruction.JUMPN:
-                self.step()
-                label = self._parse_argument()
-                return interpreter.JumpIfNegative(label)
+                return self._parse_with_label_arg(interpreter.JumpIfNegative)
             case _:
                 raise ValueError(f"Unknown instruction: {token.value}")
 
