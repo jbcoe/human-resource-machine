@@ -173,7 +173,7 @@ def test_bump_minus():
 
 
 def test_bump_plus_indirect():
-    """Test BumpPlus instruction."""
+    """Test BumpPlus instruction with indirection."""
     registers = {0: 4, 4: 42}
     instructions = [BumpPlus(0, indirect=True)]  # Bumps register 4
     interpreter = Interpreter(instructions=instructions, registers=registers)
@@ -184,7 +184,7 @@ def test_bump_plus_indirect():
 
 
 def test_bump_minus_indirect():
-    """Test BumpMinus instruction."""
+    """Test BumpMinus instruction with indirection."""
     registers = {0: 4, 4: 42}
     instructions = [BumpMinus(0, indirect=True)]  # Bumps register 4
     interpreter = Interpreter(instructions=instructions, registers=registers)
@@ -208,6 +208,26 @@ def test_subtract():
     """Test Subtract instruction."""
     registers = {"A": 5, "B": 3}
     instructions = [CopyFrom("A"), Subtract("B")]
+    interpreter = Interpreter(instructions=instructions, registers=registers)
+    interpreter.execute_program()
+
+    assert interpreter.value == 2
+
+
+def test_add_indirect():
+    """Test Add instruction with with indirection."""
+    registers = {"A": 5, 0: 4, 4: 3}
+    instructions = [CopyFrom("A"), Add(0, indirect=True)]
+    interpreter = Interpreter(instructions=instructions, registers=registers)
+    interpreter.execute_program()
+
+    assert interpreter.value == 8
+
+
+def test_subtract_indirect():
+    """Test Subtract instruction with with indirection."""
+    registers = {"A": 5, 0: 4, 4: 3}
+    instructions = [CopyFrom("A"), Subtract(0, indirect=True)]
     interpreter = Interpreter(instructions=instructions, registers=registers)
     interpreter.execute_program()
 
