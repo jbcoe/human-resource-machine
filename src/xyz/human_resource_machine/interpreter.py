@@ -270,7 +270,7 @@ class Interpreter:
         return self._value
 
     def register(self, value: Value) -> Value | None:
-        return self._registers.get(value)
+        return self.registers.get(value)
 
     @property
     def output(self) -> list[Value]:
