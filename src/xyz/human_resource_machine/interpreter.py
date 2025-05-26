@@ -1,6 +1,5 @@
-from dataclasses import dataclass
 import typing
-
+from dataclasses import dataclass
 
 Value = typing.Union[int, str]
 
@@ -116,17 +115,13 @@ class Interpreter:
         registers: dict[Value, Value] | None = None,
         instructions: list[Instruction] | None = None,
     ):
-        self.instructions: list[Instruction] = instructions or []
-        self.registers = registers or {}
+        self.instructions = [] if instructions is None else instructions.copy()
+        self.registers = {} if registers is None else registers.copy()
         self.instruction_count: int = 0
         self._value: int | None = None
-        self._instruction_index: int = 0
         self._input_index: int = 0
-        self._output: list[Value] = []
         self._execution_count: int = 0
-
-    def execute_program(self, input: list[Value]) -> None:
-        self.__init__(instructions=self.instructions, registers=self.registers)
+        self._instruction_index: int = 0
 
         self.instruction_count = 0
         for instruction in self.instructions:
@@ -136,6 +131,9 @@ class Interpreter:
                 case _:
                     self.instruction_count += 1
 
+    def execute_program(self, input: list[Value]) -> list[Value]:
+        self.__init__(instructions=self.instructions, registers=self.registers)
+
         jumps: dict[str, int] = {}
         for index, instruction in enumerate(self.instructions):
             match instruction:
@@ -144,12 +142,14 @@ class Interpreter:
                 case _:
                     pass
 
+        output: list[Value] = []
+
         while self._instruction_index < len(self.instructions):
             instruction = self.instructions[self._instruction_index]
             match instruction:
                 case Inbox():
                     if self._input_index >= len(input):
-                        return  # No more input available.
+                        return output  # No more input available.
                     self._value = input[self._input_index]
                     self._input_index += 1
                     self._instruction_index += 1
@@ -157,7 +157,7 @@ class Interpreter:
                 case Outbox():
                     if self._value is None:
                         raise ValueError("No value to output")
-                    self._output.append(self._value)
+                    output.append(self._value)
                     self._value = None
                     self._instruction_index += 1
                     self._execution_count += 1
@@ -249,6 +249,7 @@ class Interpreter:
                             f"Assertion failed: expected register '{assert_register.register}' to be {assert_register.value}, got {self.registers[assert_register.register]}"
                         )
                     self._instruction_index += 1
+        return output
 
     def to_str(self) -> str:
         lines: list[str] = []
@@ -300,11 +301,11 @@ def main():
         Jump("BEGIN"),
     ]
     input = [6, 2, 0, 3, 4]
-    interpreter.execute_program(input)
+    output = interpreter.execute_program(input)
     print(interpreter.to_str(), "\n")
     print("Registers:", interpreter.registers)
     print("Input: ", input)
-    print("Output:", ", ".join(interpreter.output))
+    print("Output:", ", ".join(output))
     print("Execution count:", interpreter.executions)
     print("Instruction count:", interpreter.instruction_count)
 

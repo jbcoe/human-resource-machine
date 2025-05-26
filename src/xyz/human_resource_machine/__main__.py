@@ -1,6 +1,9 @@
+import argparse
+import importlib.util
 import os
 import sys
 from typing import Any
+
 from xyz.human_resource_machine.interpreter import (
     AssertRegisterIs,
     AssertValueIs,
@@ -9,9 +12,6 @@ from xyz.human_resource_machine.interpreter import (
     Label,
     Value,
 )
-
-import argparse
-import importlib.util
 
 
 def _load_level(level: str) -> Any:
@@ -43,10 +43,10 @@ def main():
     interpreter.instructions = level.INSTRUCTIONS
     input: list[Value] = level.INPUT
 
-    interpreter.execute_program(input)
+    output = interpreter.execute_program(input)
     print(interpreter.to_str(), "\n")
     print("Input: ", ", ".join(str(x) for x in input))
-    print("Output:", ", ".join(str(x) for x in interpreter.output))
+    print("Output:", ", ".join(str(x) for x in output))
     print("Registers used:", len(interpreter.registers))
 
     if level.SPEED_CHALLENGE:
