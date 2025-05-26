@@ -99,7 +99,7 @@ def test_copy_to_register():
 
 
 def test_copy_from_register():
-    """Test CopyTo instruction with a register."""
+    """Test CopyFrom instruction with a register."""
     instructions = [
         Inbox(),
         CopyTo("A"),
