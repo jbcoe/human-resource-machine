@@ -27,3 +27,36 @@ def test_parse_simple_code():
     assert isinstance(instructions[3], Outbox)
     assert isinstance(instructions[4], Jump)
     assert instructions[4].label == "BEGIN"
+
+
+def test_parse_code_with_indirect_registers():
+    """Test parsing code with indirect registers."""
+    source = dedent("""\
+    COPYTO [A]
+    COPYFROM B
+    ADD [C]
+    SUB D
+    BUMPUP [E]
+    BUMPDN F
+    """)
+    parser = Parser(source)
+    instructions = parser.parse()
+
+    assert len(instructions) == 6
+    assert instructions[0].register == "A"
+    assert instructions[0].indirect is True
+
+    assert instructions[1].register == "B"
+    assert instructions[1].indirect is False
+
+    assert instructions[2].register == "C"
+    assert instructions[2].indirect is True
+
+    assert instructions[3].register == "D"
+    assert instructions[3].indirect is False
+
+    assert instructions[4].register == "E"
+    assert instructions[4].indirect is True
+
+    assert instructions[5].register == "F"
+    assert instructions[5].indirect is False
