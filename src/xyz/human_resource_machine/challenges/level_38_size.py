@@ -1,17 +1,17 @@
 from xyz.human_resource_machine.interpreter import (
     BumpPlus,
-    JumpIfZero,
-    Value,
-    Label,
+    Comment,
+    CopyFrom,
+    CopyTo,
     Inbox,
     Instruction,
-    Outbox,
-    CopyTo,
-    CopyFrom,
     Jump,
-    Comment,
     JumpIfNegative,
+    JumpIfZero,
+    Label,
+    Outbox,
     Subtract,
+    Value,
 )
 
 NAME = "Digit Exploder"
@@ -52,6 +52,7 @@ INSTRUCTIONS: list[Instruction] = [
     CopyTo("big digit"),
 
     Label("Write hundreds"),
+
     CopyFrom("0"),
     CopyTo("digit"),
     CopyFrom("x"),
