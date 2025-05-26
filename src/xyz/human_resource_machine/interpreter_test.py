@@ -3,6 +3,8 @@
 import pytest
 
 from xyz.human_resource_machine.interpreter import (
+    CopyFrom,
+    CopyTo,
     Inbox,
     Interpreter,
     Jump,
@@ -85,3 +87,34 @@ def test_inbox_outbox(input):
     output = interpreter.execute_program()
 
     assert output == input
+
+
+def test_copy_to_register():
+    """Test CopyTo instruction with a register."""
+    instructions = [Inbox(), CopyTo("A")]
+    interpreter = Interpreter(instructions=instructions, input=[42])
+    interpreter.execute_program()
+
+    assert interpreter.register("A") == 42
+
+
+def test_copy_from_register():
+    """Test CopyFrom instruction with a register."""
+    instructions = [
+        Inbox(),
+        CopyTo("A"),
+        Inbox(),
+        CopyFrom("A"),
+    ]
+    interpreter = Interpreter(instructions=instructions, input=[42, "STOP"])
+    assert interpreter.register("A") is None
+    interpreter.step()  # Inbox first value
+    assert interpreter.value == 42
+    interpreter.step()  # CopyTo "A"
+    assert interpreter.register("A") == 42
+    interpreter.step()  # Inbox second value
+    assert interpreter.value == "STOP"
+    interpreter.step()  # CopyFrom "A"
+    assert interpreter.value == 42
+
+    interpreter.execute_program()
