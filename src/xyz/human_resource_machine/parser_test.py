@@ -1,6 +1,7 @@
 """Tests for the Human-Resource-Machine-like language parser."""
 
 from textwrap import dedent
+from typing import Type
 
 import pytest
 
@@ -65,7 +66,7 @@ def test_parse_simple_code():
 )
 def test_parse_code_with_registers(
     source: str,
-    instruction: Instruction,
+    instruction: Type[Instruction],
     register: str,
     is_indirect: bool,
 ):
@@ -88,7 +89,7 @@ def test_parse_code_with_registers(
         ("JUMPN NEGATIVE", JumpIfNegative, "NEGATIVE"),
     ],
 )
-def test_parse_jumps(source: str, instruction: Instruction, label: str):
+def test_parse_jumps(source: str, instruction: Type[Instruction], label: str):
     """Test parsing jump instructions."""
     parser = Parser(source)
     instructions = parser.parse()
