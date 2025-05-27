@@ -1,0 +1,32 @@
+name: Storage floor
+description: |
+  Imagine each thing in the INBOX is an address and each address refers to a
+  tile 0-9 on the floor. For each address in the INBOX, pick up the letter at
+  that address and OUTBOX it.
+speed-challenge: 25
+size-challenge: 5
+registers:
+  0: "N"
+  1: "K"
+  2: "A"
+  3: "E"
+  4: "R"
+  5: "D"
+  6: "O"
+  7: "L"
+  8: "Y"
+  9: "J"
+  12: 8
+input: |
+  6
+  2
+  0
+  3
+  4
+source: |
+  BEGIN:
+  INBOX
+  COPYTO 12
+  COPYFROM [12]
+  OUTBOX
+  JUMP BEGIN

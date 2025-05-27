@@ -1,0 +1,62 @@
+name: Digit Exploder
+description: |
+  Explode a number into its digits, outputting the hundreds, tens, and units
+  separately. The input is a number between 0 and 999, inclusive.
+speed-challenge: 165
+size-challenge: 30
+registers:
+  0: 0
+  10: 10
+  100: 100
+input: |
+  1
+  982
+  39
+  235
+source: |
+  BEGIN:
+  COPYFROM 10
+  COPYTO big-digit
+  INBOX
+  COPYTO x
+  # Is < 10?
+  SUB 10
+  JUMPN Write-Units
+  # Is < 100?
+  SUB 100
+  JUMPN Write-tens
+  COPYFROM 100
+  COPYTO big-digit
+  JUMP Write-hundreds
+
+  # Big-Digit
+  Write-tens:
+  COPYFROM 10
+  COPYTO big-digit
+
+  Write-hundreds:
+
+  COPYFROM 0
+  COPYTO digit
+  COPYFROM x
+  # Get big-digit
+  Loop-in-big-digit:
+  SUB big-digit
+  JUMPN Write-big-digit
+  COPYTO x
+  BUMPUP digit
+  COPYFROM x
+  JUMP Loop-in-big-digit
+  Write-big-digit:
+  COPYFROM digit
+  OUTBOX
+
+  COPYFROM 100
+  SUB big-digit
+  JUMPZ Write-tens
+
+  # UNITS
+  Write-Units:
+  COPYFROM x
+  OUTBOX
+  JUMP BEGIN

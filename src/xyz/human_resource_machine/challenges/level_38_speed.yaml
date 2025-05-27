@@ -1,0 +1,158 @@
+name: Digit Exploder
+description: |
+  Explode a number into its digits, outputting the hundreds, tens, and units
+  separately. The input is a number between 0 and 999, inclusive.
+speed-challenge: 165
+size-challenge: 30
+registers:
+  0: 0
+  10: 10
+  100: 100
+input: |
+  1
+  982
+  39
+  235
+source: |
+    BEGIN:
+    INBOX
+    COPYTO x
+    # Is < 10?
+    SUB 10
+    JUMPN Write-Units
+    # Is < 100?
+    SUB 100
+    JUMPN Tens
+
+    # Hundreds Initialization
+    COPYFROM 0
+    COPYTO digit
+    BUMPUP digit
+    COPYFROM x
+    SUB 100
+    # Hundreds: Get hundreds digit
+    # Unrolled loop in 100s
+      # 1
+      SUB 100
+      JUMPN Write-Hundreds-1
+      COPYTO x
+      # 2
+      SUB 100
+      JUMPN Write-Hundreds-2
+      COPYTO x
+      # 3
+      SUB 100
+      JUMPN Write-Hundreds-3
+      COPYTO x
+      # 4
+      SUB 100
+      JUMPN Write-Hundreds-4
+      COPYTO x
+      # 5
+      SUB 100
+      JUMPN Write-Hundreds-5
+      COPYTO x
+      # 6
+      SUB 100
+      JUMPN Write-Hundreds-6
+      COPYTO x
+      # 7
+      SUB 100
+      JUMPN Write-Hundreds-7
+      COPYTO x
+      # 8
+      SUB 100
+      JUMPN Write-Hundreds-8
+      COPYTO x
+      # 9 No check and jump, just flow down.
+
+    Write-Hundreds-9:
+    BUMPUP digit
+    Write-Hundreds-8:
+    BUMPUP digit
+    Write-Hundreds-7:
+    BUMPUP digit
+    Write-Hundreds-6:
+    BUMPUP digit
+    Write-Hundreds-5:
+    BUMPUP digit
+    Write-Hundreds-4:
+    BUMPUP digit
+    Write-Hundreds-3:
+    BUMPUP digit
+    Write-Hundreds-2:
+    BUMPUP digit
+    Write-Hundreds-1:
+    # No BumpPlus as we bumped earlier.
+    OUTBOX
+
+    ### TENS
+    Tens:
+    # Tens Initialization
+    COPYFROM 0
+    COPYTO digit
+    COPYFROM x
+    # Tens: Get tens digit
+    # Unrolled loop in 10s
+      # 0
+      SUB 10
+      JUMPN Write-Tens-0
+      COPYTO x
+      # 1
+      SUB 10
+      JUMPN Write-Tens-1
+      COPYTO x
+      # 2
+      SUB 10
+      JUMPN Write-Tens-2
+      COPYTO x
+      # 3
+      SUB 10
+      JUMPN Write-Tens-3
+      COPYTO x
+      # 4
+      SUB 10
+      JUMPN Write-Tens-4
+      COPYTO x
+      # 5
+      SUB 10
+      JUMPN Write-Tens-5
+      COPYTO x
+      # 6
+      SUB 10
+      JUMPN Write-Tens-6
+      COPYTO x
+      # 7
+      SUB 10
+      JUMPN Write-Tens-7
+      COPYTO x
+      # 8
+      SUB 10
+      JUMPN Write-Tens-8
+      COPYTO x
+      # 9 No check and jump, just flow down.
+
+    BUMPUP digit
+    Write-Tens-8:
+    BUMPUP digit
+    Write-Tens-7:
+    BUMPUP digit
+    Write-Tens-6:
+    BUMPUP digit
+    Write-Tens-5:
+    BUMPUP digit
+    Write-Tens-4:
+    BUMPUP digit
+    Write-Tens-3:
+    BUMPUP digit
+    Write-Tens-2:
+    BUMPUP digit
+    Write-Tens-1:
+    BUMPUP digit
+    Write-Tens-0:
+    OUTBOX
+
+    Write-Units:
+    COPYFROM x
+    OUTBOX
+    JUMP BEGIN
