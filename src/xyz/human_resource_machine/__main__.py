@@ -56,7 +56,7 @@ def main():
     arg_parser.add_argument("path", type=str, help="Level to execute")
     args = arg_parser.parse_args()
 
-    if "/" not in args.path:
+    if not os.path.isabs(args.path):
         args.path = os.path.join(os.path.dirname(__file__), "challenges", args.path)
     level = Level.from_yaml(args.path)
 
