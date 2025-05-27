@@ -1,66 +1,76 @@
-import argparse
-import importlib.util
-import os
-import sys
-from typing import Any
+from __future__ import annotations
 
+import argparse
+import os
+from dataclasses import dataclass
+
+import yaml
+
+import xyz.human_resource_machine.parser as parser
 from xyz.human_resource_machine.interpreter import (
-    AssertRegisterIs,
-    AssertValueIs,
-    Comment,
     Interpreter,
-    Label,
+    Value,
+    int_or_str,
 )
 
 
-def _load_level(level: str) -> Any:
-    file_path = os.path.join(os.path.dirname(__file__), "challenges", f"{level}.py")
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"Module path {file_path} not found.")
+@dataclass
+class Level:
+    """A class representing a level in the Human Resource Machine game."""
 
-    module_name = f"xyz.human_resource_machine.challenges.{level}"
+    source: str
+    input: list[Value]
+    registers: dict[Value, Value]
+    speed_challenge: int
+    size_challenge: int
 
-    spec = importlib.util.spec_from_file_location(module_name, file_path)
-    assert spec is not None, f"Level {level} not found"
-    module = importlib.util.module_from_spec(spec)
-    assert module is not None, f"Module {module_name} cannot be loaded."
-    sys.modules[module_name] = module
-    spec.loader.exec_module(module)  # type: ignore
-    return module
+    @staticmethod
+    def from_yaml(path: str) -> Level:
+        """Load a level from a YAML file."""
+
+        with open(path) as i:
+            data = yaml.safe_load(i)
+
+        return Level(
+            source=data["source"],
+            input=[int_or_str(x) for x in data.get("input", "").splitlines() if x],
+            registers={
+                int_or_str(k): int_or_str(v) for k, v in data["registers"].items()
+            },
+            speed_challenge=data["speed-challenge"],
+            size_challenge=data["size-challenge"],
+        )
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Human Resource Machine Interpreter")
-    parser.add_argument("level", type=str, help="Level to execute")
-    args = parser.parse_args()
+    arg_parser = argparse.ArgumentParser(
+        description="Human Resource Machine Interpreter"
+    )
+    arg_parser.add_argument("path", type=str, help="Level to execute")
+    args = arg_parser.parse_args()
 
-    level = _load_level(args.level)
+    if not os.path.isabs(args.path):
+        args.path = os.path.join(os.path.dirname(__file__), "challenges", args.path)
+    level = Level.from_yaml(args.path)
 
     interpreter = Interpreter(
-        instructions=level.INSTRUCTIONS,
-        registers=level.REGISTERS,
-        input=level.INPUT,
+        instructions=parser.Parser(level.source).parse(),
+        registers=level.registers,
+        input=level.input,
     )
-
     output = interpreter.execute_program()
     print(interpreter.to_str(), "\n")
     print("Input: ", ", ".join(str(x) for x in interpreter._input))
     print("Output:", ", ".join(str(x) for x in output))
     print("Registers used:", len(interpreter.registers))
 
-    if level.SPEED_CHALLENGE:
-        print(
-            f"Execution count: {interpreter.executions} target: {level.SPEED_CHALLENGE}"
-        )
-    if level.SIZE_CHALLENGE:
-        instruction_count = 0
-        for instruction in interpreter.instructions:
-            match instruction:
-                case Label() | Comment() | AssertValueIs() | AssertRegisterIs():
-                    continue
-                case _:
-                    instruction_count += 1
-        print(f"Size challenge: {instruction_count} target: {level.SIZE_CHALLENGE}")
+    print(
+        f"Execution count: {interpreter.executions} target: {level.speed_challenge}",
+    )
+    print(
+        f"Size challenge: {interpreter.instruction_count} "
+        f"target: {level.size_challenge}",
+    )
 
 
 if __name__ == "__main__":

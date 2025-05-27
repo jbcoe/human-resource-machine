@@ -4,6 +4,14 @@ from dataclasses import dataclass
 Value = typing.Union[int, str]
 
 
+def int_or_str(value: str) -> Value:
+    """Convert a string to an int if possible, otherwise return the string."""
+    try:
+        return int(value)
+    except ValueError:
+        return value
+
+
 @dataclass(frozen=True, slots=True)
 class _UsesRegister:
     register: Value
@@ -182,12 +190,28 @@ class Interpreter:
                 self._instruction_index += 1
                 self._execution_count += 1
             case Add() as add_:
+                if not isinstance(self._value, int):
+                    raise ValueError(
+                        f"Value {self._value} must be an integer for addition"
+                    )
                 argument = self._read_register(add_)
+                if not isinstance(argument, int):
+                    raise ValueError(
+                        f"Argument {argument} must be an integer for addition"
+                    )
                 self._value += argument
                 self._instruction_index += 1
                 self._execution_count += 1
             case Subtract() as subtract_:
+                if not isinstance(self._value, int):
+                    raise ValueError(
+                        f"Value {self._value} must be an integer for subtraction"
+                    )
                 argument = self._read_register(subtract_)
+                if not isinstance(argument, int):
+                    raise ValueError(
+                        f"Argument {argument} must be an integer for subtraction"
+                    )
                 self._value -= argument
                 self._instruction_index += 1
                 self._execution_count += 1

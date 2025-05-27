@@ -20,7 +20,7 @@ class Token:
     """A token in the Human Resource Machine-like language."""
 
     kind: TokenKind
-    value: str
+    value: str | int
     line: int
 
 

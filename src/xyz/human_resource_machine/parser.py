@@ -4,6 +4,7 @@ from typing import Type
 
 import xyz.human_resource_machine.interpreter as interpreter
 import xyz.human_resource_machine.lexer as lexer
+from xyz.human_resource_machine.interpreter import int_or_str
 
 
 class Parser:
@@ -19,6 +20,7 @@ class Parser:
         self, cls: Type[interpreter.Instruction]
     ) -> interpreter.Instruction:
         """Parse a register token into an interpreter register."""
+
         if self.token is None or self.token.kind != lexer.TokenKind.INSTRUCTION:
             raise ValueError(f"Expected instruction, but got {self.token}.")
         self.step()
@@ -27,8 +29,8 @@ class Parser:
             raise ValueError(f"Expected argument, but got {token}.")
         register = token.value
         if register.startswith("[") and register.endswith("]"):
-            return cls(register[1:-1], True)
-        return cls(register, False)
+            return cls(int_or_str(register[1:-1]), True)
+        return cls(int_or_str(register), False)
 
     def _parse_with_label_arg(
         self, cls: Type[interpreter.Instruction]

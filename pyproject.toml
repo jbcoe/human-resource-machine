@@ -8,13 +8,16 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "pyyaml>=6.0.2",
+]
 
 [project.scripts]
 human-resource-machine = "xyz.human_resource_machine.__main__:main"
 
 [dependency-groups]
 dev = [
+    "ipython>=9.2.0",
     "pre-commit>=4.2.0",
     "pytest>=8.3.5",
     "ruff>=0.11.11",
