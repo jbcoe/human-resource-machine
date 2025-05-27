@@ -1,5 +1,8 @@
+import logging
 import typing
 from dataclasses import dataclass
+
+logger = logging.getLogger(__name__)
 
 Value = typing.Union[int, str]
 
@@ -174,6 +177,7 @@ class Interpreter:
     def step(self) -> list[Value] | None:
         """Execute the next instruction in the program."""
         instruction = self.instructions[self._instruction_index]
+        logger.debug("Instruction %d: %s", self._instruction_index, instruction)
         match instruction:
             case Inbox():
                 if self._input_index >= len(self._input):

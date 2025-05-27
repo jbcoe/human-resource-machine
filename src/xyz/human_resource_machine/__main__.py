@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import os
 from dataclasses import dataclass
 
@@ -46,8 +47,36 @@ def main():
     arg_parser = argparse.ArgumentParser(
         description="Human Resource Machine Interpreter"
     )
-    arg_parser.add_argument("path", type=str, help="Level to execute")
+    arg_parser.add_argument(
+        "path",
+        type=str,
+        help="Level to execute",
+    )
+    arg_parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable debug logging",
+    )
+    arg_parser.add_argument(
+        "--logging_format",
+        type=str,
+        default="%(levelname)s | %(asctime)s | %(name)s | %(filename)s:%(lineno)s | %(message)s",
+        help="Format for logging output",
+    )
+    arg_parser.add_argument(
+        "--logging_datefmt",
+        type=str,
+        default="%Y-%m-%d %H:%M:%S %Z",
+        help="Date format for logging output",
+    )
     args = arg_parser.parse_args()
+
+    logging.basicConfig(
+        level=logging.DEBUG if args.debug else logging.INFO,
+        format=args.logging_format,
+        datefmt=args.logging_datefmt,
+    )
+    logging.info("Starting Human Resource Machine Interpreter")
 
     if not os.path.isabs(args.path):
         args.path = os.path.join(os.path.dirname(__file__), "challenges", args.path)
