@@ -2,14 +2,23 @@
 
 from textwrap import dedent
 
+import pytest
+
 from xyz.human_resource_machine.interpreter import (
+    Add,
+    BumpMinus,
+    BumpPlus,
     Comment,
+    CopyFrom,
+    CopyTo,
     Inbox,
+    Instruction,
     Jump,
     JumpIfNegative,
     JumpIfZero,
     Label,
     Outbox,
+    Subtract,
 )
 from xyz.human_resource_machine.parser import Parser
 
@@ -37,56 +46,53 @@ def test_parse_simple_code():
     assert instructions[4].label == "BEGIN"
 
 
-def test_parse_code_with_indirect_registers():
-    """Test parsing code with indirect registers."""
-    source = dedent("""\
-    COPYTO [A]
-    COPYFROM B
-    ADD [C]
-    SUB D
-    BUMPUP [E]
-    BUMPDN F
-    """)
+@pytest.mark.parametrize(
+    "source, instruction, register, is_indirect",
+    [
+        ("COPYTO A", CopyTo, "A", False),
+        ("COPYTO [A]", CopyTo, "A", True),
+        ("COPYFROM B", CopyFrom, "B", False),
+        ("COPYFROM [B]", CopyFrom, "B", True),
+        ("ADD C", Add, "C", False),
+        ("ADD [C]", Add, "C", True),
+        ("SUB D", Subtract, "D", False),
+        ("SUB [D]", Subtract, "D", True),
+        ("BUMPUP E", BumpPlus, "E", False),
+        ("BUMPUP [E]", BumpPlus, "E", True),
+        ("BUMPDN F", BumpMinus, "F", False),
+        ("BUMPDN [F]", BumpMinus, "F", True),
+    ],
+)
+def test_parse_code_with_registers(
+    source: str,
+    instruction: Instruction,
+    register: str,
+    is_indirect: bool,
+):
+    """Test parsing code with direct and indirect registers."""
+
     parser = Parser(source)
     instructions = parser.parse()
 
-    assert len(instructions) == 6
-    assert instructions[0].register == "A"
-    assert instructions[0].indirect is True
-
-    assert instructions[1].register == "B"
-    assert instructions[1].indirect is False
-
-    assert instructions[2].register == "C"
-    assert instructions[2].indirect is True
-
-    assert instructions[3].register == "D"
-    assert instructions[3].indirect is False
-
-    assert instructions[4].register == "E"
-    assert instructions[4].indirect is True
-
-    assert instructions[5].register == "F"
-    assert instructions[5].indirect is False
+    assert len(instructions) == 1
+    assert isinstance(instructions[0], instruction)
+    assert instructions[0].register == register
+    assert instructions[0].indirect == is_indirect
 
 
-def test_parse_jumps():
+@pytest.mark.parametrize(
+    "source, instruction, label",
+    [
+        ("JUMP START", Jump, "START"),
+        ("JUMPZ ZERO", JumpIfZero, "ZERO"),
+        ("JUMPN NEGATIVE", JumpIfNegative, "NEGATIVE"),
+    ],
+)
+def test_parse_jumps(source: str, instruction: Instruction, label: str):
     """Test parsing jump instructions."""
-    # This code is nonsensical, but tests the parser's ability to handle jumps.
-    source = dedent("""\
-    JUMP START
-    JUMPZ ZERO
-    JUMPN NEGATIVE
-    """)
     parser = Parser(source)
     instructions = parser.parse()
 
-    assert len(instructions) == 3
-    assert isinstance(instructions[0], Jump)
-    assert instructions[0].label == "START"
-
-    assert isinstance(instructions[1], JumpIfZero)
-    assert instructions[1].label == "ZERO"
-
-    assert isinstance(instructions[2], JumpIfNegative)
-    assert instructions[2].label == "NEGATIVE"
+    assert len(instructions) == 1
+    assert isinstance(instructions[0], instruction)
+    assert instructions[0].label == label
