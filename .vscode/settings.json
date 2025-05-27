@@ -14,5 +14,11 @@
     "editor.codeActionsOnSave": {
       "source.organizeImports": "explicit"
     }
-  }
+  },
+  "python.defaultInterpreterPath": ".venv/bin/python",
+  "python.testing.pytestArgs": [
+    "src"
+  ],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true
 }
