@@ -39,7 +39,7 @@ class Level:
 
         return Level(
             source=data["source"],
-            input=[_as_int_or_str(x) for x in data.get("input", "").split("\n") if x],
+            input=[_as_int_or_str(x) for x in data.get("input", "").splitlines() if x],
             registers={
                 _as_int_or_str(k): _as_int_or_str(v)
                 for k, v in data["registers"].items()
