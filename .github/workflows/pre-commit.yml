@@ -17,4 +17,5 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
+
       - uses: pre-commit/action@v3.0.1

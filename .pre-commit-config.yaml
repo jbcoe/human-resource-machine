@@ -1,5 +1,8 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
+ci:
+  skip: [ty]
+
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v5.0.0
@@ -24,3 +27,11 @@ repos:
     - id: ruff
       args: [ --fix ]
     - id: ruff-format
+
+- repo: local
+  hooks:
+    - id: ty
+      name: ty check
+      entry: uvx ty check . --ignore unresolved-import
+      language: system
+      files: "\\.py$"
