@@ -19,6 +19,14 @@ class Parser:
         self, cls: Type[interpreter.Instruction]
     ) -> interpreter.Instruction:
         """Parse a register token into an interpreter register."""
+
+        def _as_int_or_str(value: str) -> int | str:
+            """Convert a string to an int if possible, otherwise return the string."""
+            try:
+                return int(value)
+            except ValueError:
+                return value
+
         if self.token is None or self.token.kind != lexer.TokenKind.INSTRUCTION:
             raise ValueError(f"Expected instruction, but got {self.token}.")
         self.step()
@@ -27,8 +35,8 @@ class Parser:
             raise ValueError(f"Expected argument, but got {token}.")
         register = token.value
         if register.startswith("[") and register.endswith("]"):
-            return cls(register[1:-1], True)
-        return cls(register, False)
+            return cls(_as_int_or_str(register[1:-1]), True)
+        return cls(_as_int_or_str(register), False)
 
     def _parse_with_label_arg(
         self, cls: Type[interpreter.Instruction]
