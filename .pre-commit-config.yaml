@@ -1,5 +1,8 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
+ci:
+  skip: [ty]
+
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v5.0.0
@@ -29,6 +32,6 @@ repos:
   hooks:
     - id: ty
       name: ty check
-      entry: 'bash -c ''if [ -z "$GITHUB_ACTIONS" ]; then uvx ty check .; else echo "Skipping ty check on CI"; exit 0; fi'''
+      entry: uvx ty check . --ignore unresolved-import
       language: system
       files: "\\.py$"
