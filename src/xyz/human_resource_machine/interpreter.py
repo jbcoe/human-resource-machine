@@ -4,6 +4,14 @@ from dataclasses import dataclass
 Value = typing.Union[int, str]
 
 
+def int_or_str(value: str) -> Value:
+    """Convert a string to an int if possible, otherwise return the string."""
+    try:
+        return int(value)
+    except ValueError:
+        return value
+
+
 @dataclass(frozen=True, slots=True)
 class _UsesRegister:
     register: Value

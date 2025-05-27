@@ -10,6 +10,7 @@ import xyz.human_resource_machine.parser as parser
 from xyz.human_resource_machine.interpreter import (
     Interpreter,
     Value,
+    int_or_str,
 )
 
 
@@ -27,22 +28,14 @@ class Level:
     def from_yaml(path: str) -> Level:
         """Load a level from a YAML file."""
 
-        def _as_int_or_str(value: str) -> int | str:
-            """Convert a string to an int if possible, otherwise return the string."""
-            try:
-                return int(value)
-            except ValueError:
-                return value
-
         with open(path) as i:
             data = yaml.safe_load(i)
 
         return Level(
             source=data["source"],
-            input=[_as_int_or_str(x) for x in data.get("input", "").splitlines() if x],
+            input=[int_or_str(x) for x in data.get("input", "").splitlines() if x],
             registers={
-                _as_int_or_str(k): _as_int_or_str(v)
-                for k, v in data["registers"].items()
+                int_or_str(k): int_or_str(v) for k, v in data["registers"].items()
             },
             speed_challenge=data["speed-challenge"],
             size_challenge=data["size-challenge"],
