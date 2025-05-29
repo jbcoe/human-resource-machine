@@ -53,18 +53,18 @@ def main():
         help="Level to execute",
     )
     arg_parser.add_argument(
-        "--debug",
+        "--debug-logging",
         action="store_true",
         help="Enable debug logging",
     )
     arg_parser.add_argument(
-        "--logging_format",
+        "--logging-format",
         type=str,
         default="%(levelname)s | %(asctime)s | %(name)s | %(filename)s:%(lineno)s | %(message)s",
         help="Format for logging output",
     )
     arg_parser.add_argument(
-        "--logging_datefmt",
+        "--logging-datefmt",
         type=str,
         default="%Y-%m-%d %H:%M:%S %Z",
         help="Date format for logging output",
@@ -72,7 +72,7 @@ def main():
     args = arg_parser.parse_args()
 
     logging.basicConfig(
-        level=logging.DEBUG if args.debug else logging.INFO,
+        level=logging.DEBUG if args.debug_logging else logging.INFO,
         format=args.logging_format,
         datefmt=args.logging_datefmt,
     )
