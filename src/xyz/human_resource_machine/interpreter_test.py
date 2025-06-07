@@ -11,6 +11,7 @@ from xyz.human_resource_machine.interpreter import (
     Inbox,
     Interpreter,
     Jump,
+    JumpIfZero,  # Added import
     Label,
     Outbox,
     Subtract,
@@ -232,3 +233,84 @@ def test_subtract_indirect():
     interpreter.execute_program()
 
     assert interpreter.value == 2
+
+
+def test_to_dot_simple():
+    """Test the to_dot method with a simple program."""
+    instructions = [
+        Inbox(),
+        Outbox(),
+    ]
+    interpreter = Interpreter(instructions=instructions)
+    dot_output = interpreter.to_dot()
+    # More robust checking, less sensitive to exact string formatting
+    assert "digraph G {" in dot_output
+    assert 'instr_0 [label="0: Inbox()"];' in dot_output
+    assert 'instr_1 [label="1: Outbox()"];' in dot_output
+    assert "instr_0 -> instr_1;" in dot_output
+    assert "}" in dot_output
+
+
+def test_to_dot_with_jump():
+    """Test the to_dot method with a jump instruction."""
+    instructions = [
+        Label("START"),
+        Inbox(),
+        Jump("START"),
+    ]
+    interpreter = Interpreter(instructions=instructions)
+    dot_output = interpreter.to_dot()
+    # Check for key elements, order might vary
+    assert "digraph G {" in dot_output
+    assert '"START" [shape=plaintext];' in dot_output
+    assert (
+        'instr_0 [label="0: Inbox()"];' in dot_output
+    )  # Inbox is the first actual instruction
+    assert (
+        "instr_1 [label=\"1: Jump(label='START')\"];" in dot_output
+    )  # Jump is the second
+    assert '"START" -> instr_0;' in dot_output  # Label points to Inbox
+    assert "instr_0 -> instr_1;" in dot_output  # Inbox points to Jump
+    assert 'instr_1 -> "START";' in dot_output  # Jump points to Label
+    assert "}" in dot_output
+
+
+def test_to_dot_with_conditional_jump():
+    """Test the to_dot method with a conditional jump instruction."""
+    instructions = [
+        Inbox(),
+        JumpIfZero("END"),
+        Outbox(),
+        Label("END"),
+    ]
+    interpreter = Interpreter(instructions=instructions)
+    dot_output = interpreter.to_dot()
+    assert "digraph G {" in dot_output
+    assert 'instr_0 [label="0: Inbox()"];' in dot_output
+    assert "instr_1 [label=\"1: JumpIfZero(label='END')\"];" in dot_output
+    assert 'instr_2 [label="2: Outbox()"];' in dot_output
+    assert '"END" [shape=plaintext];' in dot_output
+    assert "instr_0 -> instr_1;" in dot_output
+    assert 'instr_1 -> "END" [label="if zero"];' in dot_output
+    assert 'instr_1 -> instr_2 [label="not zero"];' in dot_output
+    assert 'instr_2 -> "END";' in dot_output
+    assert "}" in dot_output
+
+
+def test_to_dot_with_comments():
+    """Test the to_dot method with comments in the program."""
+    from xyz.human_resource_machine.interpreter import Comment
+
+    instructions = [
+        Comment("This is a comment"),
+        Inbox(),
+        Comment("Another comment"),
+        Outbox(),
+    ]
+    interpreter = Interpreter(instructions=instructions)
+    dot_output = interpreter.to_dot()
+    assert "digraph G {" in dot_output
+    assert 'instr_0 [label="0: Inbox()"];' in dot_output
+    assert 'instr_1 [label="1: Outbox()"];' in dot_output
+    assert "instr_0 -> instr_1;" in dot_output
+    assert "}" in dot_output
