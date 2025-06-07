@@ -292,6 +292,112 @@ class Interpreter:
                 case _ as instruction:
                     lines.append(f"{index}: {instruction}")
                     index += 1
+        return "\\n".join(lines)
+
+    def to_dot(self) -> str:
+        """Return the program instructions in dotfile format."""
+        lines: list[str] = ["digraph G {"]
+        node_map: dict[int, str] = {}
+        # First pass: define nodes and labels for actual instructions
+        idx_counter = 0
+        for i, instruction in enumerate(self.instructions):
+            match instruction:
+                case Comment():
+                    # Comments are not nodes in the graph
+                    pass
+                case Label() as label_instr:
+                    # Labels point to the next actual instruction
+                    node_map[i] = f'"{label_instr.label}"'
+                    lines.append(f"  {node_map[i]} [shape=plaintext];")
+                case _:
+                    node_id = f"instr_{idx_counter}"
+                    node_map[i] = node_id
+                    # Sanitize instruction string for dot format
+                    instr_str = str(instruction).replace(
+                        '"', '\\"'
+                    )  # Corrected sanitization
+                    shape = "box"
+                    if isinstance(instruction, (Jump, JumpIfZero, JumpIfNegative)):
+                        shape = "diamond"
+                    lines.append(
+                        f'  {node_id} [shape={shape}, label="{idx_counter}: {instr_str}"];'
+                    )
+                    idx_counter += 1
+
+        # Second pass: define edges
+        for i, instruction in enumerate(self.instructions):
+            if i not in node_map:  # Skip comments
+                continue
+
+            current_node_id = node_map[i]
+
+            # Determine the actual next instruction index, skipping comments
+            actual_next_instr_idx = i + 1
+            while actual_next_instr_idx < len(self.instructions) and isinstance(
+                self.instructions[actual_next_instr_idx], Comment
+            ):
+                actual_next_instr_idx += 1
+
+            # Default sequential flow (if not a jump or label that only points elsewhere)
+            if not isinstance(instruction, (Jump, JumpIfZero, JumpIfNegative, Label)):
+                if (
+                    actual_next_instr_idx < len(self.instructions)
+                    and actual_next_instr_idx in node_map
+                ):
+                    lines.append(
+                        f"  {current_node_id} -> {node_map[actual_next_instr_idx]};"
+                    )
+            elif isinstance(
+                instruction, Label
+            ):  # Labels should point to the next instruction
+                if (
+                    actual_next_instr_idx < len(self.instructions)
+                    and actual_next_instr_idx in node_map
+                ):
+                    lines.append(
+                        f"  {current_node_id} -> {node_map[actual_next_instr_idx]};"
+                    )
+
+            match instruction:
+                case Jump() as jump_instr:
+                    target_idx = self._jumps.get(jump_instr.label)
+                    if target_idx is not None and target_idx in node_map:
+                        lines.append(f"  {current_node_id} -> {node_map[target_idx]};")
+                case JumpIfZero() as jump_if_zero_instr:
+                    target_idx = self._jumps.get(jump_if_zero_instr.label)
+                    if target_idx is not None and target_idx in node_map:
+                        lines.append(
+                            f'  {current_node_id} -> {node_map[target_idx]} [label="if zero"];'
+                        )
+                    # Edge for not jumping (sequential)
+                    if (
+                        actual_next_instr_idx < len(self.instructions)
+                        and actual_next_instr_idx in node_map
+                    ):
+                        lines.append(
+                            f'  {current_node_id} -> {node_map[actual_next_instr_idx]} [label="not zero"];'
+                        )
+                case JumpIfNegative() as jump_if_negative_instr:
+                    target_idx = self._jumps.get(jump_if_negative_instr.label)
+                    if target_idx is not None and target_idx in node_map:
+                        lines.append(
+                            f'  {current_node_id} -> {node_map[target_idx]} [label="if negative"];'
+                        )
+                    # Edge for not jumping (sequential)
+                    if (
+                        actual_next_instr_idx < len(self.instructions)
+                        and actual_next_instr_idx in node_map
+                    ):
+                        lines.append(
+                            f'  {current_node_id} -> {node_map[actual_next_instr_idx]} [label="not negative"];'
+                        )
+                # For other instructions like Inbox, Outbox, Add, Subtract, CopyTo, CopyFrom, BumpPlus, BumpMinus,
+                # the default sequential link is already added above if they are not jumps or labels.
+                # No special edge logic needed here for them beyond the default.
+                case _:
+                    pass
+
+        lines.append("}")
         return "\n".join(lines)
 
     @property
