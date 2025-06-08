@@ -292,7 +292,7 @@ class Interpreter:
                 case _ as instruction:
                     lines.append(f"{index}: {instruction}")
                     index += 1
-        return "\\n".join(lines)
+        return "\n".join(lines)
 
     def to_dot(self) -> str:
         """Return the program instructions in dotfile format."""

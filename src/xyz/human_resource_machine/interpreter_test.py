@@ -11,7 +11,7 @@ from xyz.human_resource_machine.interpreter import (
     Inbox,
     Interpreter,
     Jump,
-    JumpIfZero,  # Added import
+    JumpIfZero,
     Label,
     Outbox,
     Subtract,
@@ -245,8 +245,8 @@ def test_to_dot_simple():
     dot_output = interpreter.to_dot()
     # More robust checking, less sensitive to exact string formatting
     assert "digraph G {" in dot_output
-    assert 'instr_0 [label="0: Inbox()"];' in dot_output
-    assert 'instr_1 [label="1: Outbox()"];' in dot_output
+    assert 'instr_0 [shape=box, label="0: Inbox()"];' in dot_output
+    assert 'instr_1 [shape=box, label="1: Outbox()"];' in dot_output
     assert "instr_0 -> instr_1;" in dot_output
     assert "}" in dot_output
 
@@ -264,14 +264,14 @@ def test_to_dot_with_jump():
     assert "digraph G {" in dot_output
     assert '"START" [shape=plaintext];' in dot_output
     assert (
-        'instr_0 [label="0: Inbox()"];' in dot_output
+        'instr_0 [shape=box, label="0: Inbox()"];' in dot_output
     )  # Inbox is the first actual instruction
     assert (
-        "instr_1 [label=\"1: Jump(label='START')\"];" in dot_output
+        "instr_1 [shape=diamond, label=\"1: Jump(label='START')\"];" in dot_output
     )  # Jump is the second
-    assert '"START" -> instr_0;' in dot_output  # Label points to Inbox
+    assert '"START" -> instr_0;' in dot_output
     assert "instr_0 -> instr_1;" in dot_output  # Inbox points to Jump
-    assert 'instr_1 -> "START";' in dot_output  # Jump points to Label
+    assert 'instr_1 -> "START";' in dot_output
     assert "}" in dot_output
 
 
@@ -286,9 +286,11 @@ def test_to_dot_with_conditional_jump():
     interpreter = Interpreter(instructions=instructions)
     dot_output = interpreter.to_dot()
     assert "digraph G {" in dot_output
-    assert 'instr_0 [label="0: Inbox()"];' in dot_output
-    assert "instr_1 [label=\"1: JumpIfZero(label='END')\"];" in dot_output
-    assert 'instr_2 [label="2: Outbox()"];' in dot_output
+    assert 'instr_0 [shape=box, label="0: Inbox()"];' in dot_output
+    assert (
+        "instr_1 [shape=diamond, label=\"1: JumpIfZero(label='END')\"];" in dot_output
+    )
+    assert 'instr_2 [shape=box, label="2: Outbox()"];' in dot_output
     assert '"END" [shape=plaintext];' in dot_output
     assert "instr_0 -> instr_1;" in dot_output
     assert 'instr_1 -> "END" [label="if zero"];' in dot_output
@@ -310,7 +312,7 @@ def test_to_dot_with_comments():
     interpreter = Interpreter(instructions=instructions)
     dot_output = interpreter.to_dot()
     assert "digraph G {" in dot_output
-    assert 'instr_0 [label="0: Inbox()"];' in dot_output
-    assert 'instr_1 [label="1: Outbox()"];' in dot_output
+    assert 'instr_0 [shape=box, label="0: Inbox()"];' in dot_output
+    assert 'instr_1 [shape=box, label="1: Outbox()"];' in dot_output
     assert "instr_0 -> instr_1;" in dot_output
     assert "}" in dot_output
