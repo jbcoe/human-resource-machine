@@ -69,6 +69,11 @@ def main():
         default="%Y-%m-%d %H:%M:%S %Z",
         help="Date format for logging output",
     )
+    arg_parser.add_argument(
+        "--dotfile",
+        type=str,
+        help="Output the program in dotfile format to the specified path",
+    )
     args = arg_parser.parse_args()
 
     logging.basicConfig(
@@ -88,7 +93,7 @@ def main():
         input=level.input,
     )
     output = interpreter.execute_program()
-    print(interpreter.to_str(), "\n")
+    print(interpreter.to_str(), "\n")  # Extra newline for better readability.
     print("Input: ", ", ".join(str(x) for x in interpreter._input))
     print("Output:", ", ".join(str(x) for x in output))
     print("Registers used:", len(interpreter.registers))
@@ -100,6 +105,11 @@ def main():
         f"Size challenge: {interpreter.instruction_count} "
         f"target: {level.size_challenge}",
     )
+
+    if args.dotfile:
+        with open(args.dotfile, "w") as f:
+            f.write(interpreter.to_dot())
+        print(f"Dotfile written to {args.dotfile}")
 
 
 if __name__ == "__main__":
