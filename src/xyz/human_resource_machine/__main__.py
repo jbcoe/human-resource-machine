@@ -93,7 +93,7 @@ def main():
         input=level.input,
     )
     output = interpreter.execute_program()
-    print(interpreter.to_str(), "\\n")
+    print(interpreter.to_str(), "\n")  # Extra newline for better readability.
     print("Input: ", ", ".join(str(x) for x in interpreter._input))
     print("Output:", ", ".join(str(x) for x in output))
     print("Registers used:", len(interpreter.registers))
