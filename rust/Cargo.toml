@@ -1,0 +1,15 @@
+[package]
+name = "xyz-human-resource-machine-rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
+clap = { version = "4.0", features = ["derive"] }
+log = "0.4"
+env_logger = "0.10"
+
+[[bin]]
+name = "hrm"
+path = "src/main.rs"
