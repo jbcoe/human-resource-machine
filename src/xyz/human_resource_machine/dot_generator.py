@@ -1,22 +1,21 @@
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
-from .parser import Program
 from .interpreter import (
-    Label,
-    Jump,
-    JumpIfZero,
-    JumpIfNegative,
-    Comment,
-    Inbox,
-    Outbox,
     Add,
-    Subtract,
-    CopyTo,
-    CopyFrom,
-    BumpPlus,
     BumpMinus,
-    Halt,
+    BumpPlus,
+    Comment,
+    CopyFrom,
+    CopyTo,
+    Inbox,
+    Jump,
+    JumpIfNegative,
+    JumpIfZero,
+    Label,
+    Outbox,
+    Subtract,
 )
+from .parser import Program
 
 
 class DotGenerator:
@@ -61,7 +60,7 @@ class DotGenerator:
                 )
                 if current_node_id:
                     self.dot_lines.append(f"  {current_node_id} -> {node_id};")
-                current_node_id = node_id  # Update current_node_id for sequential flow
+                current_node_id = node_id
             elif isinstance(statement, (JumpIfZero, JumpIfNegative)):
                 # Conditional jumps are represented as diamonds
                 self.dot_lines.append(
@@ -69,13 +68,7 @@ class DotGenerator:
                 )
                 if current_node_id:
                     self.dot_lines.append(f"  {current_node_id} -> {node_id};")
-                current_node_id = node_id  # Update current_node_id for sequential flow
-            elif isinstance(statement, Halt):
-                # Halt instruction
-                self.dot_lines.append(f'  {node_id} [label="HALT"];')
-                if current_node_id:
-                    self.dot_lines.append(f"  {current_node_id} -> {node_id};")
-                current_node_id = node_id  # Update current_node_id for sequential flow
+                current_node_id = node_id
             elif isinstance(
                 statement,
                 (Inbox, Outbox, Add, Subtract, CopyTo, CopyFrom, BumpPlus, BumpMinus),
@@ -87,7 +80,7 @@ class DotGenerator:
                 self.dot_lines.append(f'  {node_id} [label="{label}"];')
                 if current_node_id:
                     self.dot_lines.append(f"  {current_node_id} -> {node_id};")
-                current_node_id = node_id  # Update current_node_id for sequential flow
+                current_node_id = node_id
 
         # Second pass: Connect jumps and conditional jumps to their target labels
         for i, statement in enumerate(self.program.statements):
