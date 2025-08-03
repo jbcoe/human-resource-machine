@@ -21,6 +21,7 @@ from xyz.human_resource_machine.interpreter import (
     Outbox,
     Subtract,
 )
+from xyz.human_resource_machine.lexer import Token, TokenKind
 from xyz.human_resource_machine.parser import Parser
 
 
@@ -97,3 +98,27 @@ def test_parse_jumps(source: str, instruction: Type[Instruction], label: str):
     assert len(instructions) == 1
     assert isinstance(instructions[0], instruction)
     assert instructions[0].label == label
+
+
+def test_parse_missing_argument():
+    """Test parsing an instruction with a missing argument."""
+    source = "COPYTO"
+    parser = Parser(source)
+    with pytest.raises(ValueError, match="Expected argument, but got None"):
+        parser.parse()
+
+
+def test_parse_unknown_instruction():
+    """Test parsing an unknown instruction."""
+    parser = Parser("")
+    parser.tokens = [Token(TokenKind.INSTRUCTION, "FOO", 1)]
+    with pytest.raises(ValueError, match="Unknown instruction at line 1: FOO"):
+        parser.parse()
+
+
+def test_parse_missing_label():
+    """Test parsing a jump instruction with a missing label."""
+    source = "JUMP"
+    parser = Parser(source)
+    with pytest.raises(ValueError, match="Expected argument, but got None"):
+        parser.parse()
