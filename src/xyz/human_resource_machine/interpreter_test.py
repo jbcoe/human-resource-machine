@@ -4,6 +4,8 @@ import pytest
 
 from xyz.human_resource_machine.interpreter import (
     Add,
+    AssertRegisterIs,
+    AssertValueIs,
     BumpMinus,
     BumpPlus,
     CopyFrom,
@@ -71,6 +73,14 @@ def test_outbox():
     output = interpreter.execute_program()
 
     assert output == input
+
+
+def test_outbox_with_no_value():
+    """Test the Outbox instruction with no value to output."""
+    instructions = [Outbox()]
+    interpreter = Interpreter(instructions=instructions)
+    with pytest.raises(ValueError, match="No value to output"):
+        interpreter.execute_program()
 
 
 @pytest.mark.parametrize(
@@ -204,6 +214,29 @@ def test_add():
     assert interpreter.value == 8
 
 
+def test_add_with_invalid_value():
+    """Test Add instruction with a non-integer value."""
+    registers = {"B": 3}
+    instructions = [Inbox(), Add("B")]
+    interpreter = Interpreter(
+        instructions=instructions,
+        registers=registers,
+        input=["A"],  # type: ignore
+    )
+    interpreter.step()  # Get the value "A" from input.
+    with pytest.raises(ValueError, match="Value A must be an integer for addition"):
+        interpreter.step()
+
+
+def test_add_with_invalid_register_value():
+    """Test Add instruction with a non-integer register value."""
+    registers = {"A": 5, "B": "C"}
+    instructions = [CopyFrom("A"), Add("B")]
+    interpreter = Interpreter(instructions=instructions, registers=registers)
+    with pytest.raises(ValueError, match="Argument C must be an integer for addition"):
+        interpreter.execute_program()
+
+
 def test_subtract():
     """Test Subtract instruction."""
     registers = {"A": 5, "B": 3}
@@ -212,6 +245,51 @@ def test_subtract():
     interpreter.execute_program()
 
     assert interpreter.value == 2
+
+
+def test_assert_value_is_failure():
+    """Test AssertValueIs instruction with a failure."""
+    instructions = [Inbox(), AssertValueIs(43)]
+    interpreter = Interpreter(instructions=instructions, input=[42])
+    with pytest.raises(ValueError, match="Assertion failed: expected 43, got 42"):
+        interpreter.execute_program()
+
+
+def test_assert_register_is_failure():
+    """Test AssertRegisterIs instruction with a failure."""
+    registers = {"A": 42}
+    instructions = [AssertRegisterIs("A", 43)]
+    interpreter = Interpreter(instructions=instructions, registers=registers)
+    with pytest.raises(
+        ValueError,
+        match="Assertion failed: expected register 'A' to be 43, got 42",
+    ):
+        interpreter.execute_program()
+
+
+def test_subtract_with_invalid_value():
+    """Test Subtract instruction with a non-integer value."""
+    registers = {"B": 3}
+    instructions = [Inbox(), Subtract("B")]
+    interpreter = Interpreter(
+        instructions=instructions,
+        registers=registers,
+        input=["A"],  # type: ignore
+    )
+    interpreter.step()  # Get the value "A" from input.
+    with pytest.raises(ValueError, match="Value A must be an integer for subtraction"):
+        interpreter.step()
+
+
+def test_subtract_with_invalid_register_value():
+    """Test Subtract instruction with a non-integer register value."""
+    registers = {"A": 5, "B": "C"}
+    instructions = [CopyFrom("A"), Subtract("B")]
+    interpreter = Interpreter(instructions=instructions, registers=registers)
+    with pytest.raises(
+        ValueError, match="Argument C must be an integer for subtraction"
+    ):
+        interpreter.execute_program()
 
 
 def test_add_indirect():
