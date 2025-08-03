@@ -1,10 +1,16 @@
 """A parser for a Human Resource Machine-like language."""
 
-from typing import Type
+from dataclasses import dataclass
+from typing import List, Type
 
 import xyz.human_resource_machine.interpreter as interpreter
 import xyz.human_resource_machine.lexer as lexer
 from xyz.human_resource_machine.interpreter import int_or_str
+
+
+@dataclass(frozen=True, slots=True)
+class Program:
+    statements: List[interpreter.Instruction]
 
 
 class Parser:
@@ -89,7 +95,7 @@ class Parser:
         """Advance to the next token."""
         self.current_token_index += 1
 
-    def parse(self) -> list[interpreter.Instruction]:
+    def parse(self) -> Program:
         """Parse the tokenized source code into a list of instructions."""
         instructions = []
         while token := self.token:
@@ -106,4 +112,4 @@ class Parser:
                 )
             self.step()
 
-        return instructions
+        return Program(statements=instructions)

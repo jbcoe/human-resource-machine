@@ -34,7 +34,7 @@ def test_parse_simple_code():
     JUMP BEGIN
     """)
     parser = Parser(source)
-    instructions = parser.parse()
+    instructions = parser.parse().statements
 
     assert len(instructions) == 5
     assert isinstance(instructions[0], Comment)
@@ -73,7 +73,7 @@ def test_parse_code_with_registers(
     """Test parsing code with direct and indirect registers."""
 
     parser = Parser(source)
-    instructions = parser.parse()
+    instructions = parser.parse().statements
 
     assert len(instructions) == 1
     assert isinstance(instructions[0], instruction)
@@ -92,7 +92,7 @@ def test_parse_code_with_registers(
 def test_parse_jumps(source: str, instruction: Type[Instruction], label: str):
     """Test parsing jump instructions."""
     parser = Parser(source)
-    instructions = parser.parse()
+    instructions = parser.parse().statements
 
     assert len(instructions) == 1
     assert isinstance(instructions[0], instruction)
