@@ -76,7 +76,10 @@ class DotGenerator:
                 # Other instructions are represented as boxes
                 label = statement.__class__.__name__.upper()
                 if hasattr(statement, "register") and statement.register is not None:
-                    label += f" {statement.register}"
+                    register_str = str(statement.register)
+                    if hasattr(statement, "indirect") and statement.indirect:
+                        register_str = f"[{register_str}]"
+                    label += f" {register_str}"
                 self.dot_lines.append(f'  {node_id} [label="{label}"];')
                 if current_node_id:
                     self.dot_lines.append(f"  {current_node_id} -> {node_id};")
