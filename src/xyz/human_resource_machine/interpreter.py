@@ -294,6 +294,93 @@ class Interpreter:
                     index += 1
         return "\n".join(lines)
 
+    def to_dot(self) -> str:
+        """Return the program instructions in dotfile format."""
+        lines: list[str] = ["digraph G {"]
+        node_map: dict[int, str] = {}
+        # First pass: define nodes and labels for actual instructions
+        idx_counter = 0
+        for i, instruction in enumerate(self.instructions):
+            match instruction:
+                case Comment():
+                    # Comments are not nodes in the graph
+                    pass
+                case Label() as label_instr:
+                    # Labels point to the next actual instruction
+                    node_map[i] = f'"{label_instr.label}"'
+                    lines.append(f"  {node_map[i]} [shape=plaintext];")
+                case _:
+                    node_id = f"instr_{idx_counter}"
+                    node_map[i] = node_id
+                    instr_str = str(instruction)
+                    match instruction:
+                        case Jump() | JumpIfZero() | JumpIfNegative():
+                            shape = "diamond"
+                        case _:
+                            shape = "box"
+                    lines.append(
+                        f'  {node_id} [shape={shape}, label="{idx_counter}: {instr_str}"];'
+                    )
+                    idx_counter += 1
+
+        # Second pass: define edges
+        for i, instruction in enumerate(self.instructions):
+            if i not in node_map:  # Skip comments
+                continue
+
+            current_node_id = node_map[i]
+
+            # Determine the actual next instruction index, skipping comments
+            next_instr_idx = i + 1
+            while next_instr_idx < len(self.instructions) and isinstance(
+                self.instructions[next_instr_idx], Comment
+            ):
+                next_instr_idx += 1
+
+            next_node_exists = (
+                next_instr_idx < len(self.instructions) and next_instr_idx in node_map
+            )
+            next_node_id = node_map.get(next_instr_idx)
+
+            match instruction:
+                case Jump() as jump_instr:
+                    target_idx = self._jumps.get(jump_instr.label)
+                    if target_idx is not None and target_idx in node_map:
+                        lines.append(f"  {current_node_id} -> {node_map[target_idx]};")
+                case JumpIfZero() as jump_if_zero_instr:
+                    target_idx = self._jumps.get(jump_if_zero_instr.label)
+                    if target_idx is not None and target_idx in node_map:
+                        lines.append(
+                            f'  {current_node_id} -> {node_map[target_idx]} [label="if zero"];'
+                        )
+                    if next_node_exists and next_node_id:
+                        lines.append(
+                            f'  {current_node_id} -> {next_node_id} [label="not zero"];'
+                        )
+                case JumpIfNegative() as jump_if_negative_instr:
+                    target_idx = self._jumps.get(jump_if_negative_instr.label)
+                    if target_idx is not None and target_idx in node_map:
+                        lines.append(
+                            f'  {current_node_id} -> {node_map[target_idx]} [label="if negative"];'
+                        )
+                    if next_node_exists and next_node_id:
+                        lines.append(
+                            f'  {current_node_id} -> {next_node_id} [label="not negative"];'
+                        )
+                case Label():
+                    # Labels point to the next actual instruction
+                    if next_node_exists and next_node_id:
+                        lines.append(f"  {current_node_id} -> {next_node_id};")
+                case Comment():
+                    # Comments are already skipped by `if i not in node_map:`
+                    pass
+                case _:  # Default sequential flow for other instructions
+                    if next_node_exists and next_node_id:
+                        lines.append(f"  {current_node_id} -> {next_node_id};")
+
+        lines.append("}")
+        return "\n".join(lines)
+
     @property
     def value(self) -> Value | None:
         return self._value
