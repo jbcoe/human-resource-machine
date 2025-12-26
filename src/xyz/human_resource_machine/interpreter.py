@@ -197,27 +197,19 @@ class Interpreter:
                 self._execution_count += 1
             case Add() as add_:
                 if not isinstance(self._value, int):
-                    raise ValueError(
-                        f"Value {self._value} must be an integer for addition"
-                    )
+                    raise ValueError(f"Value {self._value} must be an integer for addition")
                 argument = self._read_register(add_)
                 if not isinstance(argument, int):
-                    raise ValueError(
-                        f"Argument {argument} must be an integer for addition"
-                    )
+                    raise ValueError(f"Argument {argument} must be an integer for addition")
                 self._value += argument
                 self._instruction_index += 1
                 self._execution_count += 1
             case Subtract() as subtract_:
                 if not isinstance(self._value, int):
-                    raise ValueError(
-                        f"Value {self._value} must be an integer for subtraction"
-                    )
+                    raise ValueError(f"Value {self._value} must be an integer for subtraction")
                 argument = self._read_register(subtract_)
                 if not isinstance(argument, int):
-                    raise ValueError(
-                        f"Argument {argument} must be an integer for subtraction"
-                    )
+                    raise ValueError(f"Argument {argument} must be an integer for subtraction")
                 self._value -= argument
                 self._instruction_index += 1
                 self._execution_count += 1
@@ -294,7 +286,10 @@ class Interpreter:
             case AssertRegisterIs() as assert_register:
                 if self.registers[assert_register.register] != assert_register.value:
                     raise ValueError(
-                        f"Assertion failed: expected register '{assert_register.register}' to be {assert_register.value}, got {self.registers[assert_register.register]}"
+                        f"Assertion failed: expected register "
+                        f"'{assert_register.register}' to be "
+                        f"{assert_register.value}, got "
+                        f"{self.registers[assert_register.register]}"
                     )
                 self._instruction_index += 1
 

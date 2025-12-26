@@ -62,7 +62,6 @@ def test_parse_code_with_registers(
     is_indirect: bool,
 ):
     """Test parsing code with direct and indirect registers."""
-
     parser = hrm_parser.Parser(source)
     instructions = parser.parse().statements
 
@@ -99,7 +98,9 @@ def test_parse_code_with_registers(
     ],
 )
 def test_parse_jumps(
-    source: str, instruction: typing.Type[hrm_interpreter.Instruction], label: str
+    source: str,
+    instruction: typing.Type[hrm_interpreter.Instruction],
+    label: str,
 ):
     """Test parsing jump instructions."""
     parser = hrm_parser.Parser(source)

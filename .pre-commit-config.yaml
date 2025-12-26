@@ -1,5 +1,3 @@
-# See https://pre-commit.com for more information
-# See https://pre-commit.com/hooks.html for more hooks
 ci:
   skip: [ty]
 
@@ -22,8 +20,16 @@ repos:
       - tomli
 
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.11.11
+  rev: v0.14.10
   hooks:
-    - id: ruff
-      args: [ --fix ]
-    - id: ruff-format
+  - id: ruff-check
+    args: [ --fix ]
+  - id: ruff-format
+
+# See: https://docs.astral.sh/ty/reference/typing-faq/#is-there-a-pre-commit-hook-for-ty
+- repo: local
+  hooks:
+  - id: ty
+    name: ty check
+    entry: ty check .
+    language: python

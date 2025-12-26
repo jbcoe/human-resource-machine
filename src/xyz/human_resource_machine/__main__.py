@@ -24,17 +24,12 @@ class Level:
     @staticmethod
     def from_yaml(path: str) -> Level:
         """Load a level from a YAML file."""
-
         with open(path) as i:
             data = yaml.safe_load(i)
 
         return Level(
             source=data["source"],
-            input=[
-                hrm_interpreter.int_or_str(x)
-                for x in data.get("input", "").splitlines()
-                if x
-            ],
+            input=[hrm_interpreter.int_or_str(x) for x in data.get("input", "").splitlines() if x],
             registers={
                 hrm_interpreter.int_or_str(k): hrm_interpreter.int_or_str(v)
                 for k, v in data["registers"].items()
@@ -45,9 +40,7 @@ class Level:
 
 
 def main():
-    arg_parser = argparse.ArgumentParser(
-        description="Human Resource Machine Interpreter"
-    )
+    arg_parser = argparse.ArgumentParser(description="Human Resource Machine Interpreter")
     arg_parser.add_argument(
         "path",
         type=str,
@@ -98,8 +91,7 @@ def main():
         f"Execution count: {interpreter.executions} target: {level.speed_challenge}",
     )
     print(
-        f"Size challenge: {interpreter.instruction_count} "
-        f"target: {level.size_challenge}",
+        f"Size challenge: {interpreter.instruction_count} target: {level.size_challenge}",
     )
 
 

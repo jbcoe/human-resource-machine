@@ -29,7 +29,7 @@ class DotGenerator:
 
         current_node_id: str | None = None
         # First pass: Create nodes for each statement and connect sequential flow
-        for i, statement in enumerate(self.program.statements):
+        for statement in self.program.statements:
             node_id = self._new_node_id()
             self.statement_to_node[statement] = node_id
 
@@ -67,10 +67,7 @@ class DotGenerator:
                 case _:
                     # Other instructions are represented as boxes
                     label = statement.__class__.__name__.upper()
-                    if (
-                        hasattr(statement, "register")
-                        and statement.register is not None
-                    ):
+                    if hasattr(statement, "register") and statement.register is not None:
                         register_str = str(statement.register)
                         if hasattr(statement, "indirect") and statement.indirect:
                             register_str = f"[{register_str}]"

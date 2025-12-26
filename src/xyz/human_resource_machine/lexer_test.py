@@ -18,9 +18,7 @@ def test_tokenize_simple_code():
     tokens = lexer.tokenize()
 
     assert len(tokens) == 6
-    assert tokens[0] == hrm_lexer.Token(
-        hrm_lexer.TokenKind.COMMENT, "This is a comment", 1
-    )
+    assert tokens[0] == hrm_lexer.Token(hrm_lexer.TokenKind.COMMENT, "This is a comment", 1)
     assert tokens[1] == hrm_lexer.Token(hrm_lexer.TokenKind.LABEL, "BEGIN", 2)
     assert tokens[2] == hrm_lexer.Token(hrm_lexer.TokenKind.INSTRUCTION, "INBOX", 3)
     assert tokens[3] == hrm_lexer.Token(hrm_lexer.TokenKind.INSTRUCTION, "OUTBOX", 4)

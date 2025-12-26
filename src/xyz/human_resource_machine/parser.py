@@ -25,7 +25,6 @@ class Parser:
         self, cls: typing.Type[hrm_interpreter.Instruction]
     ) -> hrm_interpreter.Instruction:
         """Parse a register token into an interpreter register."""
-
         if self.token is None or self.token.kind != hrm_lexer.TokenKind.INSTRUCTION:
             raise ValueError(f"Expected instruction, but got {self.token}.")
         self.step()
@@ -86,7 +85,9 @@ class Parser:
                 return self._parse_with_label_arg(hrm_interpreter.JumpIfNegative)
             case _:
                 raise ValueError(
-                    f"Unknown instruction at line {getattr(token, 'line', self.current_token_index)}: {token.value}"
+                    "Unknown instruction at line "
+                    f"{getattr(token, 'line', self.current_token_index)}: "
+                    f"{token.value}"
                 )
 
     @property
@@ -112,9 +113,7 @@ class Parser:
             elif token.kind == hrm_lexer.TokenKind.COMMENT:
                 instructions.append(hrm_interpreter.Comment(str(token.value)))
             else:
-                raise ValueError(
-                    f"Unknown token at index {self.current_token_index}: {token}"
-                )
+                raise ValueError(f"Unknown token at index {self.current_token_index}: {token}")
             self.step()
 
         return Program(statements=instructions)

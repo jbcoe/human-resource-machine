@@ -1,19 +1,10 @@
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/xyz"]
-
 [project]
 name = "xyz-human-resource-machine"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = [
-    "pyyaml>=6.0.2",
-]
+dependencies = ["pyyaml>=6.0.2"]
 
 [project.scripts]
 human-resource-machine = "xyz.human_resource_machine.__main__:main"
@@ -27,5 +18,29 @@ dev = [
     "ty>=0.0.7",
 ]
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/xyz"]
+
 [tool.pytest_ini_options]
 testpaths = ["src"]
+
+[tool.ruff]
+line-length = 100
+exclude = [".git", "__pycache__", ".venv", ".ruff_cache"]
+
+[tool.ruff.lint]
+# https://docs.astral.sh/ruff/rules/
+select = [
+    "B",      # Bugbear
+    "E",      # Pycodestyle
+    "F",      # Pyflakes
+    "I",      # Isort
+    "ICN003", # banned-import-from
+    "W",      # Pycodestyle
+]
+fixable = ["ALL"]
+unfixable = []

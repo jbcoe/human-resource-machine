@@ -1,4 +1,5 @@
-"""Unit tests for the DotGenerator class using on-disk testdata.
+"""
+Unit tests for the DotGenerator class using on-disk testdata.
 
 Each test case lives under `testdata/dot_generator` as a pair:
 - `<name>.hrm` contains the source program
