@@ -2,24 +2,12 @@
 
 import pytest
 
-from xyz.human_resource_machine.interpreter import (
-    Add,
-    BumpMinus,
-    BumpPlus,
-    CopyFrom,
-    CopyTo,
-    Inbox,
-    Interpreter,
-    Jump,
-    Label,
-    Outbox,
-    Subtract,
-)
+import xyz.human_resource_machine.interpreter as hrm_interpreter
 
 
 def test_interpreter_initialization():
     """Test the initialization of the Interpreter."""
-    interpreter = Interpreter()
+    interpreter = hrm_interpreter.Interpreter()
 
     assert interpreter.registers == {}
     assert interpreter.instructions == []
@@ -29,8 +17,10 @@ def test_interpreter_initialization():
 
 def test_step():
     """Test a single program step."""
-    instructions = [Inbox(), Inbox()]
-    interpreter = Interpreter(instructions=instructions, input=["boots", "cats"])
+    instructions = [hrm_interpreter.Inbox(), hrm_interpreter.Inbox()]
+    interpreter = hrm_interpreter.Interpreter(
+        instructions=instructions, input=["boots", "cats"]
+    )
 
     assert interpreter.instruction_index == 0
 
@@ -45,8 +35,10 @@ def test_step():
 
 def test_execution():
     """Test whole-program execution."""
-    instructions = [Inbox(), Inbox()]
-    interpreter = Interpreter(instructions=instructions, input=["boots", "cats"])
+    instructions = [hrm_interpreter.Inbox(), hrm_interpreter.Inbox()]
+    interpreter = hrm_interpreter.Interpreter(
+        instructions=instructions, input=["boots", "cats"]
+    )
     interpreter.execute_program()
 
     assert interpreter.value == "cats"
@@ -55,9 +47,9 @@ def test_execution():
 
 def test_inbox():
     """Test the Inbox instruction."""
-    instructions = [Inbox()]
+    instructions = [hrm_interpreter.Inbox()]
     input = [42]
-    interpreter = Interpreter(instructions=instructions, input=input)
+    interpreter = hrm_interpreter.Interpreter(instructions=instructions, input=input)
     interpreter.execute_program()
 
     assert interpreter.value == input[0]
@@ -65,9 +57,9 @@ def test_inbox():
 
 def test_outbox():
     """Test the Outbox instruction."""
-    instructions = [Inbox(), Outbox()]
+    instructions = [hrm_interpreter.Inbox(), hrm_interpreter.Outbox()]
     input = [42]
-    interpreter = Interpreter(instructions=instructions, input=input)
+    interpreter = hrm_interpreter.Interpreter(instructions=instructions, input=input)
     output = interpreter.execute_program()
 
     assert output == input
@@ -82,12 +74,12 @@ def test_outbox():
 def test_inbox_outbox(input):
     """Test Jump using Inbox and Outbox with various inputs."""
     instructions = [
-        Label("BEGIN"),
-        Inbox(),
-        Outbox(),
-        Jump("BEGIN"),
+        hrm_interpreter.Label("BEGIN"),
+        hrm_interpreter.Inbox(),
+        hrm_interpreter.Outbox(),
+        hrm_interpreter.Jump("BEGIN"),
     ]
-    interpreter = Interpreter(instructions=instructions, input=input)
+    interpreter = hrm_interpreter.Interpreter(instructions=instructions, input=input)
     output = interpreter.execute_program()
 
     assert output == input
@@ -95,8 +87,8 @@ def test_inbox_outbox(input):
 
 def test_copy_to_register():
     """Test CopyTo instruction with a register."""
-    instructions = [Inbox(), CopyTo("A")]
-    interpreter = Interpreter(instructions=instructions, input=[42])
+    instructions = [hrm_interpreter.Inbox(), hrm_interpreter.CopyTo("A")]
+    interpreter = hrm_interpreter.Interpreter(instructions=instructions, input=[42])
     interpreter.execute_program()
 
     assert interpreter.register("A") == 42
@@ -105,12 +97,14 @@ def test_copy_to_register():
 def test_copy_from_register():
     """Test CopyFrom instruction with a register."""
     instructions = [
-        Inbox(),
-        CopyTo("A"),
-        Inbox(),
-        CopyFrom("A"),
+        hrm_interpreter.Inbox(),
+        hrm_interpreter.CopyTo("A"),
+        hrm_interpreter.Inbox(),
+        hrm_interpreter.CopyFrom("A"),
     ]
-    interpreter = Interpreter(instructions=instructions, input=[42, "STOP"])
+    interpreter = hrm_interpreter.Interpreter(
+        instructions=instructions, input=[42, "STOP"]
+    )
     assert interpreter.register("A") is None
     interpreter.step()  # Inbox first value
     assert interpreter.value == 42
@@ -128,9 +122,11 @@ def test_copy_from_register_with_indirect():
     """Test CopyFrom instruction with an indirect register."""
     registers = {0: 4, 4: 42}
     instructions = [
-        CopyFrom(0, indirect=True),  # Reads from register 4
+        hrm_interpreter.CopyFrom(0, indirect=True),  # Reads from register 4
     ]
-    interpreter = Interpreter(instructions=instructions, registers=registers)
+    interpreter = hrm_interpreter.Interpreter(
+        instructions=instructions, registers=registers
+    )
     interpreter.execute_program()
 
     assert interpreter.value == 42
@@ -140,10 +136,10 @@ def test_copy_to_register_with_indirect():
     """Test CopyTo instruction with an indirect register."""
     registers = {0: 4}
     instructions = [
-        Inbox(),  # Reads from input
-        CopyTo(0, indirect=True),  # Writes to register 4
+        hrm_interpreter.Inbox(),  # Reads from input
+        hrm_interpreter.CopyTo(0, indirect=True),  # Writes to register 4
     ]
-    interpreter = Interpreter(
+    interpreter = hrm_interpreter.Interpreter(
         input=[42], instructions=instructions, registers=registers
     )
     interpreter.execute_program()
@@ -153,8 +149,10 @@ def test_copy_to_register_with_indirect():
 def test_bump_plus():
     """Test BumpPlus instruction."""
     registers = {"A": 5}
-    instructions = [BumpPlus("A")]
-    interpreter = Interpreter(instructions=instructions, registers=registers)
+    instructions = [hrm_interpreter.BumpPlus("A")]
+    interpreter = hrm_interpreter.Interpreter(
+        instructions=instructions, registers=registers
+    )
     interpreter.execute_program()
 
     assert interpreter.register("A") == 6
@@ -164,8 +162,10 @@ def test_bump_plus():
 def test_bump_minus():
     """Test BumpMinus instruction."""
     registers = {"A": 5}
-    instructions = [BumpMinus("A")]
-    interpreter = Interpreter(instructions=instructions, registers=registers)
+    instructions = [hrm_interpreter.BumpMinus("A")]
+    interpreter = hrm_interpreter.Interpreter(
+        instructions=instructions, registers=registers
+    )
     interpreter.execute_program()
 
     assert interpreter.register("A") == 4
@@ -175,8 +175,10 @@ def test_bump_minus():
 def test_bump_plus_indirect():
     """Test BumpPlus instruction with indirection."""
     registers = {0: 4, 4: 42}
-    instructions = [BumpPlus(0, indirect=True)]  # Bumps register 4
-    interpreter = Interpreter(instructions=instructions, registers=registers)
+    instructions = [hrm_interpreter.BumpPlus(0, indirect=True)]  # Bumps register 4
+    interpreter = hrm_interpreter.Interpreter(
+        instructions=instructions, registers=registers
+    )
     interpreter.execute_program()
 
     assert interpreter.register(4) == 43
@@ -186,8 +188,10 @@ def test_bump_plus_indirect():
 def test_bump_minus_indirect():
     """Test BumpMinus instruction with indirection."""
     registers = {0: 4, 4: 42}
-    instructions = [BumpMinus(0, indirect=True)]  # Bumps register 4
-    interpreter = Interpreter(instructions=instructions, registers=registers)
+    instructions = [hrm_interpreter.BumpMinus(0, indirect=True)]  # Bumps register 4
+    interpreter = hrm_interpreter.Interpreter(
+        instructions=instructions, registers=registers
+    )
     interpreter.execute_program()
 
     assert interpreter.register(4) == 41
@@ -197,8 +201,10 @@ def test_bump_minus_indirect():
 def test_add():
     """Test Add instruction."""
     registers = {"A": 5, "B": 3}
-    instructions = [CopyFrom("A"), Add("B")]
-    interpreter = Interpreter(instructions=instructions, registers=registers)
+    instructions = [hrm_interpreter.CopyFrom("A"), hrm_interpreter.Add("B")]
+    interpreter = hrm_interpreter.Interpreter(
+        instructions=instructions, registers=registers
+    )
     interpreter.execute_program()
 
     assert interpreter.value == 8
@@ -207,8 +213,10 @@ def test_add():
 def test_subtract():
     """Test Subtract instruction."""
     registers = {"A": 5, "B": 3}
-    instructions = [CopyFrom("A"), Subtract("B")]
-    interpreter = Interpreter(instructions=instructions, registers=registers)
+    instructions = [hrm_interpreter.CopyFrom("A"), hrm_interpreter.Subtract("B")]
+    interpreter = hrm_interpreter.Interpreter(
+        instructions=instructions, registers=registers
+    )
     interpreter.execute_program()
 
     assert interpreter.value == 2
@@ -217,8 +225,13 @@ def test_subtract():
 def test_add_indirect():
     """Test Add instruction with indirection."""
     registers = {"A": 5, 0: 4, 4: 3}
-    instructions = [CopyFrom("A"), Add(0, indirect=True)]
-    interpreter = Interpreter(instructions=instructions, registers=registers)
+    instructions = [
+        hrm_interpreter.CopyFrom("A"),
+        hrm_interpreter.Add(0, indirect=True),
+    ]
+    interpreter = hrm_interpreter.Interpreter(
+        instructions=instructions, registers=registers
+    )
     interpreter.execute_program()
 
     assert interpreter.value == 8
@@ -227,8 +240,13 @@ def test_add_indirect():
 def test_subtract_indirect():
     """Test Subtract instruction with indirection."""
     registers = {"A": 5, 0: 4, 4: 3}
-    instructions = [CopyFrom("A"), Subtract(0, indirect=True)]
-    interpreter = Interpreter(instructions=instructions, registers=registers)
+    instructions = [
+        hrm_interpreter.CopyFrom("A"),
+        hrm_interpreter.Subtract(0, indirect=True),
+    ]
+    interpreter = hrm_interpreter.Interpreter(
+        instructions=instructions, registers=registers
+    )
     interpreter.execute_program()
 
     assert interpreter.value == 2

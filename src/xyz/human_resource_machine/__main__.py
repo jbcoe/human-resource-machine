@@ -7,12 +7,8 @@ from dataclasses import dataclass
 
 import yaml
 
-import xyz.human_resource_machine.parser as parser
-from xyz.human_resource_machine.interpreter import (
-    Interpreter,
-    Value,
-    int_or_str,
-)
+import xyz.human_resource_machine.interpreter as hrm_interpreter
+import xyz.human_resource_machine.parser as hrm_parser
 
 
 @dataclass
@@ -20,8 +16,8 @@ class Level:
     """A class representing a level in the Human Resource Machine game."""
 
     source: str
-    input: list[Value]
-    registers: dict[Value, Value]
+    input: list[hrm_interpreter.Value]
+    registers: dict[hrm_interpreter.Value, hrm_interpreter.Value]
     speed_challenge: int
     size_challenge: int
 
@@ -34,9 +30,14 @@ class Level:
 
         return Level(
             source=data["source"],
-            input=[int_or_str(x) for x in data.get("input", "").splitlines() if x],
+            input=[
+                hrm_interpreter.int_or_str(x)
+                for x in data.get("input", "").splitlines()
+                if x
+            ],
             registers={
-                int_or_str(k): int_or_str(v) for k, v in data["registers"].items()
+                hrm_interpreter.int_or_str(k): hrm_interpreter.int_or_str(v)
+                for k, v in data["registers"].items()
             },
             speed_challenge=data["speed-challenge"],
             size_challenge=data["size-challenge"],
@@ -82,8 +83,8 @@ def main():
         args.path = os.path.join(os.path.dirname(__file__), "challenges", args.path)
     level = Level.from_yaml(args.path)
 
-    interpreter = Interpreter(
-        instructions=parser.Parser(level.source).parse().statements,
+    interpreter = hrm_interpreter.Interpreter(
+        instructions=hrm_parser.Parser(level.source).parse().statements,
         registers=level.registers,
         input=level.input,
     )

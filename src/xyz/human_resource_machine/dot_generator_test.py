@@ -5,14 +5,14 @@ Each test case lives under `testdata/dot_generator` as a pair:
 - `<name>.dot` contains the expected DOT output (lines to assert exist)
 """
 
-from pathlib import Path
+import pathlib
 
 import pytest
 
-from xyz.human_resource_machine.dot_generator import DotGenerator
-from xyz.human_resource_machine.parser import Parser
+import xyz.human_resource_machine.dot_generator as hrm_dot_generator
+import xyz.human_resource_machine.parser as hrm_parser
 
-TESTDATA_DIR = Path(__file__).parent / "testdata" / "dot_generator"
+TESTDATA_DIR = pathlib.Path(__file__).parent / "testdata" / "dot_generator"
 
 
 def _load_cases() -> list[tuple[str, list[str], str]]:
@@ -42,10 +42,10 @@ CASES = _load_cases()
 )
 def test_generate_dot_file(source: str, expected_lines: list[str]):
     """Test that DOT content contains expected lines from .dot file."""
-    parser = Parser(source)
+    parser = hrm_parser.Parser(source)
     program = parser.parse()
 
-    generator = DotGenerator(program)
+    generator = hrm_dot_generator.DotGenerator(program)
     content = generator.generate_dot()
 
     for line in expected_lines:
