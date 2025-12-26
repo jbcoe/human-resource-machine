@@ -34,9 +34,13 @@ class Parser:
         if token is None or token.kind != lexer.TokenKind.ARGUMENT:
             raise ValueError(f"Expected argument, but got {token}.")
         register = token.value
-        if register.startswith("[") and register.endswith("]"):
-            return cls(int_or_str(register[1:-1]), True)
-        return cls(int_or_str(register), False)
+        # Token.value can be `str | int` according to the lexer type; coerce to
+        # str before doing string operations and slicing so the type checker
+        # can reason about it.
+        reg_str = str(register)
+        if reg_str.startswith("[") and reg_str.endswith("]"):
+            return cls(int_or_str(reg_str[1:-1]), True)
+        return cls(int_or_str(reg_str), False)
 
     def _parse_with_label_arg(
         self, cls: Type[interpreter.Instruction]
@@ -54,7 +58,9 @@ class Parser:
     def _parse_instruction(self) -> interpreter.Instruction:
         """Parse one or more tokens into an interpreter instruction."""
         token = self.token
-        assert token.kind == lexer.TokenKind.INSTRUCTION
+        # Narrow the type for the type checker: ensure token is not None and is
+        # an INSTRUCTION token before accessing `token.value` below.
+        assert token is not None and token.kind == lexer.TokenKind.INSTRUCTION
 
         match token.value:
             case lexer.Instruction.INBOX:
@@ -103,9 +109,9 @@ class Parser:
                 instruction = self._parse_instruction()
                 instructions.append(instruction)
             elif token.kind == lexer.TokenKind.LABEL:
-                instructions.append(interpreter.Label(token.value))
+                instructions.append(interpreter.Label(str(token.value)))
             elif token.kind == lexer.TokenKind.COMMENT:
-                instructions.append(interpreter.Comment(token.value))
+                instructions.append(interpreter.Comment(str(token.value)))
             else:
                 raise ValueError(
                     f"Unknown token at index {self.current_token_index}: {token}"

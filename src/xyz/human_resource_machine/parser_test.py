@@ -1,7 +1,7 @@
 """Tests for the Human-Resource-Machine-like language parser."""
 
 from textwrap import dedent
-from typing import Type
+from typing import Any, Type, cast
 
 import pytest
 
@@ -37,14 +37,20 @@ def test_parse_simple_code():
     instructions = parser.parse().statements
 
     assert len(instructions) == 5
-    assert isinstance(instructions[0], Comment)
-    assert instructions[0].text == "This is a comment"
-    assert isinstance(instructions[1], Label)
-    assert instructions[1].label == "BEGIN"
-    assert isinstance(instructions[2], Inbox)
-    assert isinstance(instructions[3], Outbox)
-    assert isinstance(instructions[4], Jump)
-    assert instructions[4].label == "BEGIN"
+    instr0: Any = instructions[0]
+    instr1: Any = instructions[1]
+    instr2: Any = instructions[2]
+    instr3: Any = instructions[3]
+    instr4: Any = instructions[4]
+
+    assert isinstance(instr0, Comment)
+    assert instr0.text == "This is a comment"
+    assert isinstance(instr1, Label)
+    assert instr1.label == "BEGIN"
+    assert isinstance(instr2, Inbox)
+    assert isinstance(instr3, Outbox)
+    assert isinstance(instr4, Jump)
+    assert instr4.label == "BEGIN"
 
 
 @pytest.mark.parametrize(
@@ -76,9 +82,27 @@ def test_parse_code_with_registers(
     instructions = parser.parse().statements
 
     assert len(instructions) == 1
-    assert isinstance(instructions[0], instruction)
-    assert instructions[0].register == register
-    assert instructions[0].indirect == is_indirect
+    instr = instructions[0]
+    assert isinstance(instr, instruction)
+
+    # Narrow the static type for the checker using explicit casts.
+    if instruction is CopyTo:
+        concrete = cast(CopyTo, instr)
+    elif instruction is CopyFrom:
+        concrete = cast(CopyFrom, instr)
+    elif instruction is Add:
+        concrete = cast(Add, instr)
+    elif instruction is Subtract:
+        concrete = cast(Subtract, instr)
+    elif instruction is BumpPlus:
+        concrete = cast(BumpPlus, instr)
+    elif instruction is BumpMinus:
+        concrete = cast(BumpMinus, instr)
+    else:
+        concrete = cast(Any, instr)
+
+    assert concrete.register == register
+    assert concrete.indirect == is_indirect
 
 
 @pytest.mark.parametrize(
@@ -95,5 +119,16 @@ def test_parse_jumps(source: str, instruction: Type[Instruction], label: str):
     instructions = parser.parse().statements
 
     assert len(instructions) == 1
-    assert isinstance(instructions[0], instruction)
-    assert instructions[0].label == label
+    instr = instructions[0]
+    assert isinstance(instr, instruction)
+
+    if instruction is Jump:
+        concrete = cast(Jump, instr)
+    elif instruction is JumpIfZero:
+        concrete = cast(JumpIfZero, instr)
+    elif instruction is JumpIfNegative:
+        concrete = cast(JumpIfNegative, instr)
+    else:
+        concrete = cast(Any, instr)
+
+    assert concrete.label == label

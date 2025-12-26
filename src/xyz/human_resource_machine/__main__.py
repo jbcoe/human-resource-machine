@@ -83,7 +83,7 @@ def main():
     level = Level.from_yaml(args.path)
 
     interpreter = Interpreter(
-        instructions=parser.Parser(level.source).parse(),
+        instructions=parser.Parser(level.source).parse().statements,
         registers=level.registers,
         input=level.input,
     )

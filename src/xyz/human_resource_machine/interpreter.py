@@ -130,7 +130,7 @@ class Interpreter:
         self.instructions = [] if instructions is None else instructions.copy()
         self.registers = {} if registers is None else registers.copy()
         self.instruction_count: int = 0
-        self._value: int | None = None
+        self._value: Value | None = None
         self._input = [] if input is None else input
         self._input_index: int = 0
         self._execution_count: int = 0
@@ -161,6 +161,8 @@ class Interpreter:
 
     def _write_register(self, instruction: _UsesRegister) -> None:
         """Write the value to the register, handling indirect addressing."""
+        # _value should be set when writing; assert to help the type checker
+        assert self._value is not None, "No value to write to register"
         if instruction.indirect:
             self.registers[self.registers[instruction.register]] = self._value
         else:
@@ -230,20 +232,38 @@ class Interpreter:
                 self._execution_count += 1
             case BumpPlus() as bump_plus:
                 if bump_plus.indirect:
-                    self.registers[self.registers[bump_plus.register]] += 1
-                    self._value = self.registers[self.registers[bump_plus.register]]
+                    key = self.registers[bump_plus.register]
+                    val = self.registers[key]
+                    if not isinstance(val, int):
+                        raise ValueError("BUMPUP applied to non-integer register")
+                    val = val + 1
+                    self.registers[key] = val
+                    self._value = val
                 else:
-                    self.registers[bump_plus.register] += 1
-                    self._value = self.registers[bump_plus.register]
+                    val = self.registers[bump_plus.register]
+                    if not isinstance(val, int):
+                        raise ValueError("BUMPUP applied to non-integer register")
+                    val = val + 1
+                    self.registers[bump_plus.register] = val
+                    self._value = val
                 self._instruction_index += 1
                 self._execution_count += 1
             case BumpMinus() as bump_minus:
                 if bump_minus.indirect:
-                    self.registers[self.registers[bump_minus.register]] -= 1
-                    self._value = self.registers[self.registers[bump_minus.register]]
+                    key = self.registers[bump_minus.register]
+                    val = self.registers[key]
+                    if not isinstance(val, int):
+                        raise ValueError("BUMPDN applied to non-integer register")
+                    val = val - 1
+                    self.registers[key] = val
+                    self._value = val
                 else:
-                    self.registers[bump_minus.register] -= 1
-                    self._value = self.registers[bump_minus.register]
+                    val = self.registers[bump_minus.register]
+                    if not isinstance(val, int):
+                        raise ValueError("BUMPDN applied to non-integer register")
+                    val = val - 1
+                    self.registers[bump_minus.register] = val
+                    self._value = val
                 self._instruction_index += 1
                 self._execution_count += 1
             case Label() | Comment():
@@ -259,7 +279,8 @@ class Interpreter:
                     self._instruction_index += 1
                 self._execution_count += 1
             case JumpIfNegative() as jump:
-                if self._value < 0:
+                # Only compare numerically when the current value is an int.
+                if isinstance(self._value, int) and self._value < 0:
                     self._instruction_index = self._jumps[jump.label]
                 else:
                     self._instruction_index += 1

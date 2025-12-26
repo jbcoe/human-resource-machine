@@ -1,0 +1,42 @@
+name: Lint (ruff + ty)
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "**.py"
+      - "uv.lock"
+      - "pyproject.toml"
+      - ".github/workflows/pylint.yml"
+  push:
+    branches: [main]
+    paths:
+      - "**.py"
+      - "uv.lock"
+      - "pyproject.toml"
+      - ".github/workflows/pylint.yml"
+
+jobs:
+  ruff-ty-lint:
+    name: ruff + ty
+    runs-on: ubuntu-latest
+    env:
+      UV_FROZEN: "1"
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Run Ruff (format)
+        run: uv run ruff format .
+
+      - name: Run Ruff (check)
+        run: uv run ruff check .
+
+      - name: Run Ty (check)
+        run: uv run ty check .
