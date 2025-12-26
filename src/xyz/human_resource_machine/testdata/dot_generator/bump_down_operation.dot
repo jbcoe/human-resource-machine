@@ -1,0 +1,11 @@
+digraph G {
+  rankdir=TB;
+  node [shape=box];
+  node_1 [label="INBOX"];
+  node_2 [label="BUMPMINUS [A]"];
+  node_3 [label="COPYTO B"];
+  node_4 [label="OUTBOX"];
+  node_1 -> node_2;
+  node_2 -> node_3;
+  node_3 -> node_4;
+}

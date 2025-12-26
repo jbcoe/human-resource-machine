@@ -1,0 +1,14 @@
+digraph G {
+  rankdir=TB;
+  node [shape=box];
+  node_1 [label="INBOX"];
+  node_2 [label="END", shape=diamond];
+  node_3 [label="OUTBOX"];
+  node_4 [label="END:", shape=ellipse];
+  node_5 [label="OUTBOX"];
+  node_1 -> node_2;
+  node_2 -> node_3;
+  node_4 -> node_5;
+  node_2 -> node_4 [label='true'];
+  node_2 -> node_5 [label='false'];
+}

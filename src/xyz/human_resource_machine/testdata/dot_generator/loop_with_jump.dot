@@ -1,0 +1,12 @@
+digraph G {
+  rankdir=TB;
+  node [shape=box];
+  node_1 [label="BEGIN:", shape=ellipse];
+  node_2 [label="INBOX"];
+  node_3 [label="OUTBOX"];
+  node_4 [label="jump BEGIN", shape=diamond];
+  node_1 -> node_2;
+  node_2 -> node_3;
+  node_3 -> node_4;
+  node_4 -> node_1 [label='jump'];
+}

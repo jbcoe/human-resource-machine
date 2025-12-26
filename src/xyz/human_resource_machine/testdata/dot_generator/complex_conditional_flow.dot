@@ -1,0 +1,22 @@
+digraph G {
+  rankdir=TB;
+  node [shape=box];
+  node_1 [label="INBOX"];
+  node_2 [label="BUMPPLUS 2"];
+  node_3 [label="NEGATIVE", shape=diamond];
+  node_4 [label="OUTBOX"];
+  node_5 [label="jump END", shape=diamond];
+  node_6 [label="NEGATIVE:", shape=ellipse];
+  node_7 [label="BUMPPLUS 2"];
+  node_8 [label="OUTBOX"];
+  node_9 [label="END:", shape=ellipse];
+  node_1 -> node_2;
+  node_2 -> node_3;
+  node_3 -> node_4;
+  node_4 -> node_5;
+  node_6 -> node_7;
+  node_7 -> node_8;
+  node_3 -> node_6 [label='true'];
+  node_3 -> node_8 [label='false'];
+  node_5 -> node_9 [label='jump'];
+}
